@@ -200,6 +200,50 @@ async function main() {
     assert(invalidAddonMoney.data.errors.some((error: string) => error.includes('invalid price "Infinity"')), 'Infinity addon price is rejected');
     assert(invalidAddonMoney.data.errors.some((error: string) => error.includes('invalid price ""')), 'empty addon price is rejected');
 
+    console.log('\n─── Product id: matches update, a stale or foreign id creates instead of failing ───');
+    const matchingId = db.prepare('SELECT id FROM products WHERE name = ?').get('Quoted, Coffee') as { id: string };
+    const idMatches = await api(baseUrl, '/api/menu/csv/import/products', {
+      method: 'POST',
+      body: { csv: productCsv(`${matchingId.id},,"Quoted, Coffee","CSV Category",20,Updated,4,,,,,yes`) },
+      headers: authHeader,
+    });
+    assertEqual(idMatches.data.updated, 1, 'an id that matches an existing product updates it');
+    assertEqual(idMatches.data.created, 0, 'a matching id is not counted as created');
+    assertEqual(idMatches.data.failed, 0, 'a matching id is not a failure');
+    const updatedById = db.prepare('SELECT price FROM products WHERE id = ?').get(matchingId.id) as any;
+    assertEqual(updatedById.price, 20, 'the matched row is the one actually updated');
+
+    // Regression: exporting this same catalog and re-importing it elsewhere
+    // (a fresh install, or after this product was deleted) used to fail every
+    // such row outright instead of creating the product the file describes.
+    const staleId = await api(baseUrl, '/api/menu/csv/import/products', {
+      method: 'POST',
+      body: { csv: productCsv('stale-id-from-another-install,,Stale Id Product,CSV Category,30,Description,5,,,,,yes') },
+      headers: authHeader,
+    });
+    assertEqual(staleId.status, 200, 'a product id that matches nothing is still accepted');
+    assertEqual(staleId.data.created, 1, 'a non-matching id falls through to creating a new product');
+    assertEqual(staleId.data.failed, 0, 'a non-matching id is not a failure');
+    assertEqual(staleId.data.errors.length, 0, 'a non-matching id reports no error');
+    const staleIdProduct = db.prepare('SELECT id, price FROM products WHERE name = ?').get('Stale Id Product') as any;
+    assert(staleIdProduct.id !== 'stale-id-from-another-install', 'the new product gets its own freshly generated id, not the foreign one from the file');
+    assertEqual(staleIdProduct.price, 30, 'the new product carries the row\'s own data');
+
+    // A non-matching id still respects the name+category duplicate guard, the
+    // same as a blank id — it does not bypass dedup by carrying a foreign id.
+    const staleIdDuplicate = await api(baseUrl, '/api/menu/csv/import/products', {
+      method: 'POST',
+      body: { csv: productCsv('yet-another-foreign-id,,Stale Id Product,CSV Category,35,Description,5,,,,,yes') },
+      headers: authHeader,
+    });
+    assertEqual(staleIdDuplicate.data.skipped, 1, 'a non-matching id for an already-imported name+category is skipped, not duplicated');
+    assertEqual(staleIdDuplicate.data.created, 0, 'the duplicate is not created a second time');
+    assertEqual(
+      (db.prepare('SELECT COUNT(*) AS count FROM products WHERE name = ?').get('Stale Id Product') as any).count,
+      1,
+      'only one product exists for the name+category pair',
+    );
+
     console.log('\n─── Reactivation counters ───');
     db.prepare(
       `INSERT INTO addon_groups (id, name, is_required, min_selection, max_selection, is_active, sort_order, created_at, updated_at)

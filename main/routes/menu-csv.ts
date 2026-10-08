@@ -528,16 +528,16 @@ router.post('/import/products', requirePermission('catalog.import-export'), (req
         taxBehavior = r.tax_behavior;
       }
 
-      // If an id is provided, try to update the existing product.
-      if (r.id) {
-        const existing = db
-          .prepare('SELECT id, is_active FROM products WHERE id = ? AND deleted_at IS NULL')
-          .get(r.id) as { id: string; is_active: number } | undefined;
-        if (!existing) {
-          failed++;
-          errors.push(`Row ${i + 2} (${r.name}): id "${r.id}" not found — leave id blank to create a new item`);
-          continue;
-        }
+      // An id that matches an existing product updates it in place. An id that
+      // doesn't match anything — e.g. re-importing a file this same catalog
+      // exported, after the matching product was deleted or the database was
+      // reset — falls through to the create path below instead of failing the
+      // row: the id column is a hint for matching, not a requirement the file
+      // must satisfy.
+      const existing = r.id
+        ? db.prepare('SELECT id, is_active FROM products WHERE id = ? AND deleted_at IS NULL').get(r.id) as { id: string; is_active: number } | undefined
+        : undefined;
+      if (existing) {
         db.prepare(
           `UPDATE products SET name=?, category_id=?, price=?, description=?, cost=?,
            tax_type=?, tax_rate=?,
@@ -554,7 +554,8 @@ router.post('/import/products', requirePermission('catalog.import-export'), (req
         continue;
       }
 
-      // No id — insert as new, skip if name+category duplicate.
+      // No id, or an id that matched nothing — insert as new, skip if
+      // name+category duplicate.
       const exists = db
         .prepare('SELECT id FROM products WHERE name = ? AND category_id IS ? AND deleted_at IS NULL')
         .get(r.name, categoryId);
