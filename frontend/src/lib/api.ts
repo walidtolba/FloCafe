@@ -3,8 +3,14 @@ import axios from 'axios';
 let authRedirectInProgress = false;
 
 // Base URL derived from window.location.origin so LAN clients connect to host IP.
+// NEXT_PUBLIC_API_BASE_URL overrides this for `next dev` hot-reload mode, where the
+// page is served from the Next dev server (:3000) but the API lives on Express (:3001).
+// It is never set during npm run build/build:frontend, so production/desktop builds
+// always fall back to window.location.origin exactly as before.
+const apiOrigin = process.env.NEXT_PUBLIC_API_BASE_URL
+  || (typeof window !== 'undefined' ? window.location.origin : '');
 const api = axios.create({
-  baseURL: typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api',
+  baseURL: apiOrigin ? `${apiOrigin}/api` : '/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

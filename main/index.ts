@@ -562,6 +562,14 @@ const requestRuntimeRelaunchOnce = createRelaunchGate(requestRuntimeRelaunch);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
+// Hot-reload dev mode only (scripts/dev/dev-hot.cjs): points the main window at the
+// Next.js dev server (Fast Refresh) instead of the embedded Express static export.
+// Unset in every build/packaged path, so normal behaviour is always unaffected.
+const devHotUrl = process.env.FLO_DEV_HOT_URL;
+function getMainWindowUrl(): string {
+  return devHotUrl || `http://localhost:${getServerPort()}`;
+}
+
 let gotSingleInstanceLock = false;
 
 // Single-instance lock: prevent duplicate app instances.
@@ -662,8 +670,9 @@ function createWindow(): void {
   });
 
   // Always load from the embedded Express server (serves static Next.js export).
-  // This avoids file:// protocol issues and keeps dev/prod behaviour identical.
-  mainWindow.loadURL(`http://localhost:${getServerPort()}`);
+  // This avoids file:// protocol issues and keeps dev/prod behaviour identical,
+  // except in hot-reload dev mode (see getMainWindowUrl).
+  mainWindow.loadURL(getMainWindowUrl());
 
   // Allow target="_blank" links to open new windows for local URLs (e.g. the KDS page)
   // and blank popup windows (e.g. browser print popups). External URLs are sent to the system browser.
@@ -776,7 +785,7 @@ function createWindow(): void {
     }
   });
 
-  setupWindowLoadRetry(createdWindow, () => `http://localhost:${getServerPort()}`, {
+  setupWindowLoadRetry(createdWindow, getMainWindowUrl, {
     log,
     onRetryExhausted: ({ errorCode, errorDescription, validatedURL, retries }) => {
       log.error('[Window] Load retry exhaustion:', errorCode, errorDescription, validatedURL, `retries=${retries}`);
