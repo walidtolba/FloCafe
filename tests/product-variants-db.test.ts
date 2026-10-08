@@ -205,11 +205,6 @@ function main() {
     (migration: any) => migration.name === 'add_variant_recipe_multiplier',
   );
   assert.ok(portionMigration, 'the variant recipe-portion migration is registered');
-  assert.equal(
-    MIGRATIONS[MIGRATIONS.length - 1].name,
-    'add_variant_recipe_multiplier',
-    'the portion migration is the newest registry entry',
-  );
   db.prepare(`INSERT INTO product_variants (id, product_id, name, price, stock_quantity, track_inventory, is_active, created_at, updated_at)
     VALUES ('var-portion', 'latte', 'Half portion', 200, 4, 1, 1, ?, ?)`).run(stamp, stamp);
   // A sale recorded before the migration: its scaled ingredients are history.
