@@ -3,14 +3,13 @@ import ReceiptPrinterEncoder from '@point-of-sale/receipt-printer-encoder';
 import type { Bill, Tenant } from '@/lib/types';
 import { normalizeCurrencyToAscii, normalizeThermalText, padCurrencyPrefix } from './unicode';
 import { selectThermalCodePage, type ThermalPrinterCapabilities } from '@print/thermal-capabilities';
-import { columnsForReceiptPaperSize, displayCellWidth, fitThermalLine, graphemeSegments, padToDisplayCells, truncateToDisplayCells } from '@print/width';
+import { columnsForReceiptPaperSize, displayCellWidth, graphemeSegments, padToDisplayCells, truncateToDisplayCells } from '@print/width';
 import { getCountryByCode, getCurrencyFractionDigits, getCurrencySymbol, resolveTenantCurrency } from '@/lib/countries';
 import { receiptChargeLines } from '@/lib/charges';
 import { formatDate } from './format-date';
 import { formatTaxComponentLabel, resolveTaxComponents } from './tax-components';
 import { parseDbTimestamp } from '@/lib/utils';
 import { safePrinterText as writeSafePrinterText, wrapPrinterText, type PrintWarning } from './warnings';
-import { RECEIPT_BRANDING_NAME } from './branding';
 import {
   buildFrontendBillDocument,
   printLabelResolver,
@@ -144,16 +143,6 @@ function printOnlineOrderBanner(
   if (externalOrderId) writeSafePrinterText(enc, `#${externalOrderId}`, warnings, false, arabicShaping, cols, undefined, language).newline();
   enc
     .bold(false)
-    .align('left');
-}
-
-function printPoweredByFooter(enc: ReceiptPrinterEncoder, columns: number): void {
-  enc
-    .align('center')
-    .size('small')
-    .text(fitThermalLine(RECEIPT_BRANDING_NAME, columns))
-    .newline()
-    .size('normal')
     .align('left');
 }
 
@@ -557,7 +546,9 @@ export function buildClassicReceiptBytes(
     if (totals.pointsRedeemed) {
       safePrinterText(enc, padRow(labelOf(totals.pointsRedeemed.label), `-${totals.pointsRedeemed.points} pts`, cols), warnings, false, arabicShaping).newline();
     }
-    safePrinterText(enc, padRow(labelOf(totals.subtotal.label), formatAmount(totals.subtotal.amount, currency, locale, opts.trimDecimals === true, fractionDigits), cols), warnings, false, arabicShaping, undefined, undefined, true).newline();
+    if (totals.subtotal) {
+      safePrinterText(enc, padRow(labelOf(totals.subtotal.label), formatAmount(totals.subtotal.amount, currency, locale, opts.trimDecimals === true, fractionDigits), cols), warnings, false, arabicShaping, undefined, undefined, true).newline();
+    }
     if (totals.discount) {
       safePrinterText(enc, padRow(labelOf(totals.discount.label), `-${formatAmount(totals.discount.amount, currency, locale, opts.trimDecimals === true, fractionDigits)}`, cols), warnings, false, arabicShaping, undefined, undefined, true).newline();
     }
@@ -648,7 +639,6 @@ export function buildClassicReceiptBytes(
       safePrinterText(enc, truncate(messages.footerNote.text, cols), warnings, false, arabicShaping, cols).newline();
     }
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 
@@ -840,7 +830,6 @@ export function buildCompactReceiptBytes(
   if (messages?.footerNote) {
     safePrinterText(enc, truncate(messages.footerNote.text, cols), warnings, false, arabicShaping, cols).newline();
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 
@@ -937,8 +926,11 @@ export function buildDetailedReceiptBytes(
       cols
     ).newline();
   }
-  if (showCustomerPhone && order?.customer?.phone) {
-    safePrinterText(enc, `Customer No: ${resolveReceiptPhone(order.customer.phone, opts.maskCustomerPhone)}`, warnings, false, arabicShaping).newline();
+  // The order's own typed-in delivery phone wins over the attached
+  // customer's phone: it is the number entered for this specific delivery.
+  const receiptCustomerPhone = order?.delivery_phone || order?.customer?.phone;
+  if (showCustomerPhone && receiptCustomerPhone) {
+    safePrinterText(enc, `Customer No: ${resolveReceiptPhone(receiptCustomerPhone, opts.maskCustomerPhone)}`, warnings, false, arabicShaping).newline();
   }
   if (showTableNumber && order?.table?.name) {
     safePrinterText(enc, `Table: ${order.table.name}`, warnings, false, arabicShaping, undefined, cols).newline();
@@ -1020,7 +1012,6 @@ export function buildDetailedReceiptBytes(
   if (footerNote) {
     safePrinterText(enc, truncate(footerNote, cols), warnings, false, arabicShaping).newline();
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 

@@ -485,7 +485,9 @@ function applyLabelOverrides(
     case 'totals': {
       return Object.freeze({
         ...block,
-        subtotal: labels.subtotal !== undefined ? { ...block.subtotal, label: overrideLabel(block.subtotal.label, labels.subtotal) } : block.subtotal,
+        subtotal: block.subtotal && labels.subtotal !== undefined
+          ? { ...block.subtotal, label: overrideLabel(block.subtotal.label, labels.subtotal) }
+          : block.subtotal,
         discount: block.discount && labels.discount !== undefined
           ? { ...block.discount, label: overrideLabel(block.discount.label, labels.discount) }
           : block.discount,

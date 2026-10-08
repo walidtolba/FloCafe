@@ -8,6 +8,7 @@ const DEFAULT_MAX_ITEM_NOTES_LENGTH = 100;
 const DEFAULT_MAX_CUSTOMER_ADDRESS_LENGTH = 300;
 const DEFAULT_MAX_DELIVERY_ADDRESS_LENGTH = 300;
 const DEFAULT_MAX_DELIVERY_NOTE_LENGTH = 200;
+const DEFAULT_MAX_DELIVERY_PHONE_LENGTH = 32;
 /** Built-in methods a courier can collect at the door; wallet and loyalty settle in-store. */
 const COURIER_COLLECTIBLE_METHODS = ['cash', 'card'];
 
@@ -42,6 +43,15 @@ export function validateDeliveryAddress(db: SettingsLookup, address: string | nu
 /** Courier-only free text, bounded for the slip like the delivery address. */
 export function validateDeliveryNote(db: SettingsLookup, note: string | null | undefined): void {
   validateNoteLength(db, 'max_delivery_note_length', DEFAULT_MAX_DELIVERY_NOTE_LENGTH, note, 'Delivery note');
+}
+
+/**
+ * Free text, not a validated phone number: a cashier's shorthand or a local
+ * format the phone library doesn't recognize must never block the order.
+ * Bounded the same way the delivery address and note are.
+ */
+export function validateDeliveryPhone(db: SettingsLookup, phone: string | null | undefined): void {
+  validateNoteLength(db, 'max_delivery_phone_length', DEFAULT_MAX_DELIVERY_PHONE_LENGTH, phone, 'Delivery phone');
 }
 
 /**

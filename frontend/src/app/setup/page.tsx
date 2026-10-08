@@ -181,12 +181,16 @@ export default function SetupPage() {
   const filteredCountries = sortCountriesByLocalizedName(COUNTRIES, resolvedCountryLocale)
     .filter((c) => countryMatchesQuery(c, countryQuery, resolvedCountryLocale));
 
-  const completeSetup = () => {
+  const completeSetup = async () => {
     usePosSettingsStore.getState().setLanguage(language);
     // Persist language server-side so the standalone KDS inherits it.
-    api.put(`/settings/language`, { value: language }).catch((err: unknown) => {
+    // Must complete before logout() clears the auth token, or the request
+    // goes out unauthenticated (interceptor reads the token on a later tick).
+    try {
+      await api.put(`/settings/language`, { value: language });
+    } catch (err: unknown) {
       console.warn('[Setup] Failed to persist language setting:', err);
-    });
+    }
     logout();
     toast.success(t('completeSetupSuccess'));
     window.location.replace('/auth/login');
@@ -290,7 +294,7 @@ export default function SetupPage() {
         email_marketing: marketing,
         ...countryPayload,
       });
-      completeSetup();
+      await completeSetup();
     } catch {
       toast.error(t('errorGeneric'));
     } finally {

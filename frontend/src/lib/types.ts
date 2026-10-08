@@ -14,6 +14,7 @@ export interface User {
 export interface Tenant {
   id: number;
   business_name: string;
+  has_logo?: boolean;
   slug: string;
   database_name: string;
   business_type: 'restaurant';
@@ -198,6 +199,8 @@ export interface Order {
   customer_id: number | string | null;
   /** Address confirmed for this delivery; printed in full on the courier slip. */
   delivery_address?: string | null;
+  /** Phone typed in for this delivery; falls back for the customer's phone when no customer is attached. */
+  delivery_phone?: string | null;
   /** Method the courier expects to collect; null is unknown. Not a payment record. */
   expected_payment_method?: string | null;
   /** Historical configured-method identity; null for built-ins, sentinels, and legacy orders. */

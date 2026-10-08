@@ -33,6 +33,7 @@ import { useConfirm } from '@/hooks/use-confirm';
 import { useThemeModeToggle } from '@/hooks/useThemeModeToggle';
 import type { PermissionId } from '@shared/permissions';
 import { tenantCan } from '@/lib/permissions';
+import { normalizePathname } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,7 +83,9 @@ const ALL_NAV_ITEMS: NavItem[] = [
 ];
 
 export default function AppSidebar() {
-  const pathname = usePathname();
+  // Normalized: the desktop build's trailingSlash:true makes usePathname()
+  // return e.g. "/staff/" there but "/staff" in dev — see normalizePathname.
+  const pathname = normalizePathname(usePathname());
   const { user, currentTenant, logout } = useAuthStore();
   const { tablesRequired, kdsEnabled, whatsappEnabled, setTablesRequired, setKdsEnabled, setWhatsappEnabled } = usePosSettingsStore();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -179,9 +182,19 @@ export default function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={homeHref}>
-                <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-semibold">
-                  {(currentTenant?.business_name || tCommon('brandName')).charAt(0).toUpperCase()}
-                </div>
+                {currentTenant?.has_logo ? (
+                  <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md overflow-hidden bg-sidebar-primary">
+                    <img
+                      src={`${api.defaults.baseURL}/settings/logo`}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-semibold">
+                    {(currentTenant?.business_name || tCommon('brandName')).charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="flex flex-col gap-0.5 min-w-0 leading-none">
                   <span className="font-semibold truncate">{currentTenant?.business_name || tCommon('brandName')}</span>
                 </div>

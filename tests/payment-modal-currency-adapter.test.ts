@@ -403,8 +403,12 @@ async function runModalKeypadIntegrationTests() {
       const targetStateIndex = 3;
       const paymentMarkup = renderModal(Modal, props, 'payment', targetStateIndex);
       assert.equal(paymentMarkup.includes('>.<'), false, `${label} hides JPY payment decimal key in static markup`);
-      const discountMarkup = renderModal(Modal, props, 'discount', targetStateIndex);
-      assert.equal(discountMarkup.includes('>.<'), true, `${label} keeps decimal key for percentage discount in static markup`);
+    }
+    // PrepaidCheckoutModal has no discount UI (removed); only PaymentModal still offers one.
+    {
+      const targetStateIndex = 3;
+      const discountMarkup = renderModal(PaymentModal, { bill, currency: 'JPY', onClose: () => undefined, onPaid: () => undefined }, 'discount', targetStateIndex);
+      assert.equal(discountMarkup.includes('>.<'), true, 'PaymentModal keeps decimal key for percentage discount in static markup');
     }
 
     let browser: any;
@@ -425,8 +429,12 @@ async function runModalKeypadIntegrationTests() {
           const targetStateIndex = 3;
           await page.setContent(renderModal(Modal, props, 'payment', targetStateIndex));
           assert.equal(await page.getByRole('button', { name: '.', exact: true }).count(), 0, `${label} hides JPY payment decimal key`);
-          await page.setContent(renderModal(Modal, props, 'discount', targetStateIndex));
-          assert.equal(await page.getByRole('button', { name: '.', exact: true }).count(), 1, `${label} keeps decimal key for percentage discount`);
+        }
+        // PrepaidCheckoutModal has no discount UI (removed); only PaymentModal still offers one.
+        {
+          const targetStateIndex = 3;
+          await page.setContent(renderModal(PaymentModal, { bill, currency: 'JPY', onClose: () => undefined, onPaid: () => undefined }, 'discount', targetStateIndex));
+          assert.equal(await page.getByRole('button', { name: '.', exact: true }).count(), 1, 'PaymentModal keeps decimal key for percentage discount');
         }
       } finally {
         await browser.close();

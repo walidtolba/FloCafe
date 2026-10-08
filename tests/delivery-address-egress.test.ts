@@ -1,6 +1,7 @@
 // Delivery-address contract: the column exists and is bounded, the address never
 // reaches the cloud outbox, and the merchant's number override is a real setting.
-// The expected collection method and courier note follow the same boundary.
+// The expected collection method, courier note, and delivery phone follow the
+// same boundary.
 
 const Module = require('module');
 const originalLoad = Module._load;
@@ -28,6 +29,9 @@ const { printerRoutes } = require('../main/routes/printers');
 const DELIVERY_ADDRESS = 'Flat 4B, 123A-Anecacuilco 04330, Colonia Naucalpan';
 const OVER_CAP_ADDRESS = 'x'.repeat(400);
 const DELIVERY_NOTE = 'Gate code 4321, call on arrival';
+// National-format input; initTestDb seeds country 'IN', so normalization
+// should produce this E.164 form.
+const DELIVERY_PHONE = '98765 43210';
 
 /** `createApp` mounts the middleware production mounts, so the chain matches. */
 function testApp(): any {
@@ -128,6 +132,113 @@ test('delivery address: an over-long address is refused at the boundary', async 
   }
 });
 
+test('delivery phone: a delivery order persists the phone exactly as the cashier typed it', async () => {
+  const db = initTestDb();
+  const owner = seedOwnerUser(db);
+  seedCategory(db, 'cat-1', 'Coffee');
+  seedProduct(db, 'product-1', 'cat-1', 'Espresso', 250);
+  const { baseUrl, server } = await startServer(testApp());
+  try {
+    const created = await api(baseUrl, '/api/orders', {
+      method: 'POST',
+      headers: owner.authHeader,
+      body: { type: 'delivery', delivery_phone: DELIVERY_PHONE, items: [{ product_id: 'product-1', quantity: 1 }] },
+    });
+    assert.equal(created.status, 201, 'the delivery order is accepted');
+    assert.equal(
+      db.prepare('SELECT delivery_phone FROM orders WHERE id = ?').get(created.data.order.id).delivery_phone,
+      DELIVERY_PHONE,
+      'the order row carries exactly what the cashier typed — free text, never reformatted',
+    );
+  } finally {
+    server.close();
+    closeDatabase();
+  }
+});
+
+test('delivery phone: a non-delivery order stores no phone, even if one is sent', async () => {
+  const db = initTestDb();
+  const owner = seedOwnerUser(db);
+  seedCategory(db, 'cat-1', 'Coffee');
+  seedProduct(db, 'product-1', 'cat-1', 'Espresso', 250);
+  const { baseUrl, server } = await startServer(testApp());
+  try {
+    const created = await api(baseUrl, '/api/orders', {
+      method: 'POST',
+      headers: owner.authHeader,
+      body: { type: 'dine_in', delivery_phone: DELIVERY_PHONE, items: [{ product_id: 'product-1', quantity: 1 }] },
+    });
+    assert.equal(created.status, 201, 'the order is accepted');
+    assert.equal(
+      db.prepare('SELECT delivery_phone FROM orders WHERE id = ?').get(created.data.order.id).delivery_phone,
+      null,
+      'no phone is stored for an order that is not a delivery',
+    );
+  } finally {
+    server.close();
+    closeDatabase();
+  }
+});
+
+test('delivery phone: a format libphonenumber rejects is still accepted — it is free text, not a validated number', async () => {
+  // Regression: a cashier typed an incomplete local number ("0555555", Algeria)
+  // and the strict E.164 validator this used to run refused the WHOLE order
+  // with a 400, same as every other field the format-checked phone blocked.
+  // The delivery note and address never do this; the phone must not either.
+  const db = initTestDb();
+  const owner = seedOwnerUser(db);
+  seedCategory(db, 'cat-1', 'Coffee');
+  seedProduct(db, 'product-1', 'cat-1', 'Espresso', 250);
+  db.prepare("UPDATE settings SET value = 'DZ' WHERE key = 'country'").run();
+  const { baseUrl, server } = await startServer(testApp());
+  try {
+    const created = await api(baseUrl, '/api/orders', {
+      method: 'POST',
+      headers: owner.authHeader,
+      body: { type: 'delivery', delivery_phone: '0555555', items: [{ product_id: 'product-1', quantity: 1 }] },
+    });
+    assert.equal(created.status, 201, 'an order with an unparsable local number is still accepted');
+    assert.equal(
+      db.prepare('SELECT delivery_phone FROM orders WHERE id = ?').get(created.data.order.id).delivery_phone,
+      '0555555',
+      'the number is stored exactly as typed, not rejected or reformatted',
+    );
+  } finally {
+    server.close();
+    closeDatabase();
+  }
+});
+
+test('delivery phone: a non-string phone is refused, and an over-long one is capped at the boundary', async () => {
+  const db = initTestDb();
+  const owner = seedOwnerUser(db);
+  seedCategory(db, 'cat-1', 'Coffee');
+  seedProduct(db, 'product-1', 'cat-1', 'Espresso', 250);
+  const { baseUrl, server } = await startServer(testApp());
+  const before = db.prepare('SELECT COUNT(*) AS c FROM orders').get().c;
+  try {
+    const wrongType = await api(baseUrl, '/api/orders', {
+      method: 'POST',
+      headers: owner.authHeader,
+      body: { type: 'delivery', delivery_phone: 12345, items: [{ product_id: 'product-1', quantity: 1 }] },
+    });
+    assert.equal(wrongType.status, 400, 'a non-string phone is refused');
+
+    const overLong = await api(baseUrl, '/api/orders', {
+      method: 'POST',
+      headers: owner.authHeader,
+      body: { type: 'delivery', delivery_phone: '1'.repeat(40), items: [{ product_id: 'product-1', quantity: 1 }] },
+    });
+    assert.equal(overLong.status, 400, 'a phone past the cap is refused, not stored and not printed');
+    assert.match(String(overLong.data.error), /Delivery phone exceed maximum length/);
+
+    assert.equal(db.prepare('SELECT COUNT(*) AS c FROM orders').get().c, before, 'no refused order was persisted');
+  } finally {
+    server.close();
+    closeDatabase();
+  }
+});
+
 test('delivery address: it never reaches the cloud sync outbox', async () => {
   // The egress guard. The outbox row IS what leaves the machine: cloud sync ships
   // enabled by default, and the snapshot is built from `SELECT * FROM orders`, so
@@ -146,6 +257,7 @@ test('delivery address: it never reaches the cloud sync outbox', async () => {
         type: 'delivery',
         delivery_address: DELIVERY_ADDRESS,
         delivery_note: DELIVERY_NOTE,
+        delivery_phone: DELIVERY_PHONE,
         items: [{ product_id: 'product-1', quantity: 1 }],
       },
     });
@@ -165,6 +277,8 @@ test('delivery address: it never reaches the cloud sync outbox', async () => {
     );
     assert.ok(!('delivery_note' in payload), 'the courier note must not leave the machine either');
     assert.ok(!JSON.stringify(payload).includes('Gate code'), 'nor any fragment of the courier note');
+    assert.ok(!('delivery_phone' in payload), 'the delivery phone must not leave the machine either');
+    assert.ok(!JSON.stringify(payload).includes('98765'), 'nor any fragment of the phone');
     // The row is still a real order snapshot: this is a redaction, not a snapshot
     // that silently stopped being built.
     assert.ok(payload.order_number, 'the snapshot is otherwise intact');

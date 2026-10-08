@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import {
   ShoppingCart, UtensilsCrossed, Package, Truck, Globe,
-  Plus, Minus, Trash2, Pause, MapPin, SquarePen,
+  Plus, Minus, Trash2, Pause, MapPin, Phone, SquarePen,
   Users, Wallet, StickyNote,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -259,18 +259,30 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
           </div>
         )}
 
-        {/* Delivery address — shown inline when delivery is selected */}
+        {/* Delivery address and phone — shown inline when delivery is selected */}
         {cart.orderType === 'delivery' && (
-          <div className="flex items-center gap-2">
-            <MapPin size={14} className="text-muted-foreground shrink-0" />
-            <input
-              type="text"
-              value={cart.deliveryAddress}
-              onChange={(e) => cart.setDeliveryAddress(e.target.value)}
-              placeholder={t('deliveryAddress')}
-              className="flex-1 min-h-11 px-3 py-2 text-sm border border-border bg-card rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-            />
-          </div>
+          <>
+            <div className="flex items-center gap-2">
+              <MapPin size={14} className="text-muted-foreground shrink-0" />
+              <input
+                type="text"
+                value={cart.deliveryAddress}
+                onChange={(e) => cart.setDeliveryAddress(e.target.value)}
+                placeholder={t('deliveryAddress')}
+                className="flex-1 min-h-11 px-3 py-2 text-sm border border-border bg-card rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone size={14} className="text-muted-foreground shrink-0" />
+              <input
+                type="tel"
+                value={cart.deliveryPhone}
+                onChange={(e) => cart.setDeliveryPhone(e.target.value)}
+                placeholder={t('deliveryPhonePlaceholder')}
+                className="flex-1 min-h-11 px-3 py-2 text-sm border border-border bg-card rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+              />
+            </div>
+          </>
         )}
 
         {/* Expected collection and courier note: recorded with the order, never a payment */}

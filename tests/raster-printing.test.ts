@@ -209,7 +209,7 @@ async function run(): Promise<void> {
     blocks: compactDocument.blocks.map((block) => block.kind === 'totals'
       ? {
         ...block,
-        subtotal: { ...block.subtotal, amount: 1.23, label: { ...block.subtotal.label, primary: longFinancialLabel } },
+        subtotal: { amount: 1.23, label: { ...block.grandTotal.label, primary: longFinancialLabel } },
         grandTotal: { ...block.grandTotal, amount: 2.34, label: { ...block.grandTotal.label, primary: 'جمع کل' } },
       }
       : block),

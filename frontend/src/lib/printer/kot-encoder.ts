@@ -14,7 +14,7 @@ import {
 } from '@print/thermal-capabilities';
 import { safePrinterText as writeSafePrinterText, type PrintWarning } from './warnings';
 import { printLabelResolver } from './print-document';
-import { isKotItemPending } from '@print/document';
+import { isKotItemPending, shouldShowCustomerNumber } from '@print/document';
 import { formatItemHeading } from './item-heading';
 
 export interface KotOptions {
@@ -34,6 +34,9 @@ export interface KotOptions {
   timezone?: string;
   /** Selected thermal text capabilities; defaults to generic ESC/POS safety. */
   capabilities?: ThermalPrinterCapabilities;
+  /** Same visibility rule as bills/delivery slips; both default true. */
+  showCustomerPhone?: boolean;
+  deliveryShowCustomerPhoneAlways?: boolean;
 }
 
 // Paper-size fallback only. Callers that know the configured printer pass
@@ -106,6 +109,19 @@ export function buildKotBytes(
   if (order.customer) {
     const customerName = String(order.customer.name);
     safePrinterText(enc, thermalSafeHeaderText(`${label('pos.customer')}: ${customerName}`, `Customer: ${thermalSafeMetadataValue(customerName, language, arabicShaping, opts.capabilities)}`, language, arabicShaping, opts.capabilities), warnings, false, arabicShaping, undefined, cols, language).newline();
+  }
+  // Reuses the same customer-number visibility rule as bills/delivery slips
+  // (docs/reference/product-invariants.md) rather than a KOT-specific setting.
+  const showCustomerPhone = shouldShowCustomerNumber({
+    showOnReceipts: opts.showCustomerPhone !== false,
+    alwaysForDeliveryOrders: opts.deliveryShowCustomerPhoneAlways !== false,
+    orderType: String(order.type ?? '').trim(),
+  });
+  // The order's own typed-in delivery phone wins over the attached
+  // customer's phone: it is the number entered for this specific delivery.
+  const customerPhone = String(order.delivery_phone ?? order.customer?.phone ?? '').trim();
+  if (showCustomerPhone && customerPhone) {
+    safePrinterText(enc, thermalSafeHeaderText(`${label('print.numberShort')}: ${customerPhone}`, `Customer No: ${thermalSafeMetadataValue(customerPhone, language, arabicShaping, opts.capabilities)}`, language, arabicShaping, opts.capabilities), warnings, false, arabicShaping, undefined, cols, language).newline();
   }
 
   enc.bold(false);

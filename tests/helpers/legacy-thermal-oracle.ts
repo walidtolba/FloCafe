@@ -12,7 +12,12 @@
  * The receipt oracle preserves the legacy layout, but its add-on amount is
  * materialized from the authoritative financial semantics
  * (`price × addonQty × itemQty`) so parity tests do not preserve the
- * confirmed undercharged output. Do not make unrelated changes here.
+ * confirmed undercharged output. It also omits the Subtotal row when it
+ * equals the grand total (no tax/charges/discount), matching the
+ * now-conditional `subtotal` in `shared/print/document.ts`'s TotalsBlock,
+ * and no longer appends the "Powered by FloPOS" footer, matching its
+ * removal from `main/printers/document-classic.ts` and
+ * `document-compact.ts`. Do not make unrelated changes here.
  */
 
 import { parseDbTimestamp } from '../../main/db';
@@ -21,7 +26,6 @@ import { resolveTaxComponents } from '../../main/services/tax-components';
 import type { PrinterCutMode } from '../../main/printers/profiles';
 import {
   addonRows,
-  appendPoweredByFooter,
   buildEscPos,
   financialRows,
   formatCurrency,
@@ -139,7 +143,9 @@ export function formatClassicReceiptLegacy(order: any, bill: any, biz: any, cols
     lines.push(label + rightAlign('-' + biz.points_redeemed + ' pts', cols - label.length));
   }
 
-  lines.push(...financialRows(printLabel(lang, 'pos.subtotal'), formatCurrency(bill.subtotal, prefix, locale, trimDecimals), cols));
+  if (bill.subtotal !== bill.total) {
+    lines.push(...financialRows(printLabel(lang, 'pos.subtotal'), formatCurrency(bill.subtotal, prefix, locale, trimDecimals), cols));
+  }
   if (bill.discount_amount > 0) {
     lines.push(...financialRows(printLabel(lang, 'pos.discount'), '-' + formatCurrency(bill.discount_amount, prefix, locale, trimDecimals), cols));
   }
@@ -208,7 +214,6 @@ export function formatClassicReceiptLegacy(order: any, bill: any, biz: any, cols
 
   if (biz.footer_note) pushCenteredWrapped(lines, biz.footer_note, cols);
 
-  appendPoweredByFooter(lines);
   lines.push('{CUT}');
 
   return buildEscPos(lines, useUnicode, { cutMode, arabicShaping, columns: cols }, warnings);
@@ -268,7 +273,9 @@ export function formatCompactReceiptLegacy(order: any, bill: any, biz: any, cols
   }
 
   lines.push(dash);
-  lines.push(...financialRows(printLabel(lang, 'pos.subtotal'), formatCurrency(bill.subtotal, prefix, locale, trimDecimals), cols));
+  if (bill.subtotal !== bill.total) {
+    lines.push(...financialRows(printLabel(lang, 'pos.subtotal'), formatCurrency(bill.subtotal, prefix, locale, trimDecimals), cols));
+  }
   if (bill.discount_amount > 0) {
     lines.push(...financialRows(printLabel(lang, 'pos.discount'), '-' + formatCurrency(bill.discount_amount, prefix, locale, trimDecimals), cols));
   }
@@ -316,7 +323,6 @@ export function formatCompactReceiptLegacy(order: any, bill: any, biz: any, cols
   if ((biz.show_tax_id === true || (biz.show_tax_id !== false && hasTax)) && biz.taxRegistrationNumber) pushWrapped(lines, taxIdLabel + ': ' + biz.taxRegistrationNumber, cols);
   if (biz.footer_note) pushCenteredWrapped(lines, biz.footer_note, cols);
   else lines.push('{CENTER}' + printLabel(lang, 'print.thankYouShort') + '{/CENTER}');
-  appendPoweredByFooter(lines);
   lines.push('{CUT}');
 
   return buildEscPos(lines, useUnicode, { cutMode, arabicShaping, columns: cols }, warnings);

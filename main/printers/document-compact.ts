@@ -9,7 +9,6 @@ import type { RasterSemanticLineGroup, RasterTextLayout } from '../../shared/pri
 import { displayCellWidth, padToDisplayCells, truncateToDisplayCells } from '../../shared/print/width';
 import {
   addonRows,
-  appendPoweredByFooter,
   buildEscPos,
   financialRows,
   formatCurrency,
@@ -337,8 +336,10 @@ export function renderBillDocumentToCompactLines(
     } : undefined);
   };
   if (totals) {
-    const subtotalValue = formatCurrency(totals.subtotal.amount, prefix, options.locale, trimDecimals, fractionDigits);
-    pushTotalRow(financialRows(labelOf(totals.subtotal.label), subtotalValue, cols, options.language, options.capabilities), false, labelOf(totals.subtotal.label), subtotalValue);
+    if (totals.subtotal) {
+      const subtotalValue = formatCurrency(totals.subtotal.amount, prefix, options.locale, trimDecimals, fractionDigits);
+      pushTotalRow(financialRows(labelOf(totals.subtotal.label), subtotalValue, cols, options.language, options.capabilities), false, labelOf(totals.subtotal.label), subtotalValue);
+    }
     if (totals.discount) {
       const discountValue = '-' + formatCurrency(totals.discount.amount, prefix, options.locale, trimDecimals, fractionDigits);
       pushTotalRow(financialRows(labelOf(totals.discount.label), discountValue, cols, options.language, options.capabilities), false, labelOf(totals.discount.label), discountValue);
@@ -452,7 +453,6 @@ export function renderBillDocumentToCompactLines(
     messageFooterSourceControlLines.push(lines.at(-1) ?? '');
   }
   markGroup('message', messageFooterStart, messageFooterSourceLines, messageFooterSourceControlLines);
-  appendPoweredByFooter(lines, cols);
   lines.push('{CUT}');
 
   return lines;

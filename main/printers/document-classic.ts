@@ -14,7 +14,6 @@ import type { RasterSemanticLineGroup, RasterTextLayout } from '../../shared/pri
 import { displayCellWidth, padToDisplayCells, truncateToDisplayCells } from '../../shared/print/width';
 import {
   addonRows,
-  appendPoweredByFooter,
   buildEscPos,
   financialRows,
   formatCurrency,
@@ -574,7 +573,7 @@ export function renderBillDocumentToClassicLines(
           const value = '-' + block.pointsRedeemed.points + ' pts';
           appendFinancial(segment, financialRows(label, value, cols, options.language, options.capabilities), false, label, value);
         }
-        {
+        if (block.subtotal) {
           const label = labelOf(block.subtotal.label);
           const value = formatCurrency(block.subtotal.amount, prefix, options.locale, trimDecimals, fractionDigits);
           appendFinancial(segment, financialRows(label, value, cols, options.language, options.capabilities), false, label, value);
@@ -787,7 +786,6 @@ export function renderBillDocumentToClassicLines(
     }
   }
 
-  appendPoweredByFooter(lines, cols);
   lines.push('{CUT}');
 
   return lines;

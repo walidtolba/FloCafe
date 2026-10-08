@@ -5,7 +5,7 @@ import { createTranslator } from 'use-intl/core';
 import { getCachedMessages } from '@/lib/i18n/loader';
 import { LANGUAGES, getLanguageDirection, type Language } from '@/lib/i18n/languages';
 import { defaultPrintLanguagePolicy, resolveKotLanguage } from '@print/policy';
-import { directionalText, isKotItemPending, type DirectionalText } from '@print/document';
+import { directionalText, isKotItemPending, shouldShowCustomerNumber, type DirectionalText } from '@print/document';
 import { containsRtlScript } from '@print/direction';
 import type { TextDirection } from '@print/types';
 import { usePosSettingsStore } from '@/store/pos-settings';
@@ -144,6 +144,17 @@ export function generateKotHtml(
   const stationName = String(opts.stationName ?? '');
 
   const orderType = resolveOrderType(order.type, lang, tr);
+  // Reuses the same customer-number visibility rule as bills/delivery slips
+  // (docs/reference/product-invariants.md) rather than a KOT-specific setting.
+  const posSettings = usePosSettingsStore.getState();
+  const showCustomerPhone = shouldShowCustomerNumber({
+    showOnReceipts: posSettings.billShowCustomerPhone,
+    alwaysForDeliveryOrders: posSettings.billDeliveryShowCustomerPhoneAlways,
+    orderType: String(order.type ?? '').trim(),
+  });
+  // The order's own typed-in delivery phone wins over the attached
+  // customer's phone: it is the number entered for this specific delivery.
+  const customerPhone = String(order.delivery_phone ?? order.customer?.phone ?? '').trim();
 
   const items = (order.items ?? [])
     .filter((item) => isKotItemPending(item.status))
@@ -178,6 +189,7 @@ export function generateKotHtml(
       ${order.table?.name ? `<p style="margin:2px 0;">${escapeHtml(labelWithoutPlaceholder(tr('pos.tableLabel')))}: ${directionalValue(directionalText(String(order.table.name), base), base)}</p>` : ''}
       ${orderType ? `<p style="margin:2px 0;">${escapeHtml(tr('print.kot.type'))}: ${escapeHtml(orderType)}</p>` : ''}
       ${order.customer?.name ? `<p style="margin:2px 0;">${escapeHtml(tr('pos.customer'))}: ${directionalValue(directionalText(String(order.customer.name), base), base)}</p>` : ''}
+      ${showCustomerPhone && customerPhone ? `<p style="margin:2px 0;">${escapeHtml(tr('print.numberShort'))}: ${directionalValue(directionalText(customerPhone, base), base)}</p>` : ''}
       <p style="margin:2px 0;">${escapeHtml(`${tr('print.time')}: ${formatTime(createdAt, locale, timezone ? { timeZone: timezone } : undefined)}`)}</p>
       <hr style="border:1px dashed #000;margin:${padding} 0;">
       ${itemRows}

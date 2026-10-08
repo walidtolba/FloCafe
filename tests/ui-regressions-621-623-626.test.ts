@@ -47,8 +47,6 @@ assert.match(dashboard, /aria-label=\{t\('openDatePicker'\)\}/, 'dashboard date 
 
 const prepaidCheckout = source('frontend/src/components/pos/PrepaidCheckoutModal.tsx');
 assert.doesNotMatch(prepaidCheckout, /bg-gradient-to-br from-slate-800 to-slate-900/, 'prepaid checkout does not restore the oversized total card');
-assert.match(prepaidCheckout, /preview\.discountedSubtotal/, 'prepaid checkout shows the post-discount subtotal');
-assert.match(prepaidCheckout, /t\('discounts'\)/, 'prepaid checkout retains the compact cart-level discounts control');
 const numberPadIndex = prepaidCheckout.indexOf('<CurrencyTouchNumberPad');
 const changeReturnedIndex = prepaidCheckout.indexOf("t('changeReturned')");
 assert.ok(

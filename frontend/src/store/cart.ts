@@ -17,6 +17,7 @@ interface CartState {
   customerSource: 'explicit' | 'reservation' | null;
   guestCount: number;
   deliveryAddress: string;
+  deliveryPhone: string;
   /** '' is unknown; 'pending', 'cash', 'card', or a custom method name otherwise. */
   expectedPaymentMethod: string;
   /** Configured-method identity for a custom choice; built-ins and sentinels keep it null. */
@@ -48,6 +49,7 @@ interface CartState {
   setReservationCustomer: (customer: Customer | null) => void;
   setGuestCount: (count: number) => void;
   setDeliveryAddress: (address: string) => void;
+  setDeliveryPhone: (phone: string) => void;
   setExpectedPaymentMethod: (method: string, methodId?: number | null) => void;
   setDeliveryNote: (note: string) => void;
   setOnlinePlatform: (platform: string) => void;
@@ -75,6 +77,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   customerSource: null,
   guestCount: 1,
   deliveryAddress: '',
+  deliveryPhone: '',
   expectedPaymentMethod: '',
   expectedPaymentMethodId: null,
   deliveryNote: '',
@@ -171,7 +174,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   clearCart: () => {
-    set({ items: [], tableId: null, heldOrderId: null, customerId: null, customer: null, customerSource: null, guestCount: 1, orderType: 'dine_in', deliveryAddress: '', expectedPaymentMethod: '', expectedPaymentMethodId: null, deliveryNote: '', onlinePlatform: '', externalOrderId: '', orderNotes: '', waivedChargeIds: new Set<string>(), optedInChargeIds: new Set<string>() });
+    set({ items: [], tableId: null, heldOrderId: null, customerId: null, customer: null, customerSource: null, guestCount: 1, orderType: 'dine_in', deliveryAddress: '', deliveryPhone: '', expectedPaymentMethod: '', expectedPaymentMethodId: null, deliveryNote: '', onlinePlatform: '', externalOrderId: '', orderNotes: '', waivedChargeIds: new Set<string>(), optedInChargeIds: new Set<string>() });
   },
 
   loadItems: (items, tableId, customerId, guestCount, orderNotes, heldOrderId, waivedChargeIds, optedInChargeIds) => {
@@ -192,6 +195,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   setOrderType: (type) => set((state) => ({
     orderType: type,
     deliveryAddress: type !== 'delivery' ? '' : state.deliveryAddress,
+    deliveryPhone: type !== 'delivery' ? '' : state.deliveryPhone,
     expectedPaymentMethod: type !== 'delivery' ? '' : state.expectedPaymentMethod,
     expectedPaymentMethodId: type !== 'delivery' ? null : state.expectedPaymentMethodId,
     deliveryNote: type !== 'delivery' ? '' : state.deliveryNote,
@@ -209,6 +213,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   setReservationCustomer: (customer) => set({ customer, customerId: customer?.id ?? null, customerSource: customer ? 'reservation' : null }),
   setGuestCount: (count) => set({ guestCount: count }),
   setDeliveryAddress: (address) => set({ deliveryAddress: address }),
+  setDeliveryPhone: (phone) => set({ deliveryPhone: phone }),
   setExpectedPaymentMethod: (method, methodId) => set({ expectedPaymentMethod: method, expectedPaymentMethodId: methodId ?? null }),
   setDeliveryNote: (note) => set({ deliveryNote: note }),
   setOnlinePlatform: (platform) => set({ onlinePlatform: platform }),

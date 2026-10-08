@@ -789,11 +789,14 @@ export default function OrdersPage() {
 
   const handlePrintDeliverySlip = async (order: Order) => {
     const customer = order.customer;
-    const phone = customer?.phone
+    const customerPhone = customer?.phone
       ? (customer.country_code && !customer.phone.startsWith(customer.country_code)
         ? `${customer.country_code} ${customer.phone}`
         : customer.phone)
       : '';
+    // The phone typed in for this delivery wins, the same precedence the
+    // address below already uses.
+    const phone = order.delivery_phone || customerPhone;
     setPrintingSlipOrderId(order.id);
     try {
       const warnings = await printDeliverySlip(

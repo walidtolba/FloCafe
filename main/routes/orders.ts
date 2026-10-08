@@ -20,7 +20,7 @@ import { resolveOrderItemVariant, variantUnitPrice, type ProductVariant } from '
 import { applyRecipeSnapshot, buildRecipeSnapshot, parseRecipeSnapshot } from '../services/recipes';
 import { notifyKdsUpdate, notifyOrderUpdated } from '../services/kds';
 import { cloudSync } from '../services/cloud-sync';
-import { validateOrderNotes, validateItemNotes, validateProductQuantity, validateDeliveryAddress, validateDeliveryNote, resolveExpectedPaymentMethod, resolveExpectedPaymentMethodIdentity } from './orders-validation';
+import { validateOrderNotes, validateItemNotes, validateProductQuantity, validateDeliveryAddress, validateDeliveryNote, validateDeliveryPhone, resolveExpectedPaymentMethod, resolveExpectedPaymentMethodIdentity } from './orders-validation';
 import { hasPermission, requirePermission } from '../services/authorization';
 import { ROLE_ACCESS, hasRole } from '../../shared/role-permissions';
 import { getCurrencyFractionDigits, getCurrencyMinorUnitFactor } from '../countries';
@@ -627,7 +627,7 @@ router.get('/:id', orderReadRateLimit, requirePermission('orders.read'), (req: R
 router.post('/', orderWriteRateLimit, requirePermission('orders.create'), (req: Request, res: Response) => {
   try {
     const body = req.body || {};
-    const { table_id, customer_id, type, guest_count, special_instructions, packaging_charge, delivery_charge, service_charge, items, online_platform, external_order_id, delivery_address, expected_payment_method, expected_payment_method_id, delivery_note, waived_charge_ids, opted_in_charge_ids } = body;
+    const { table_id, customer_id, type, guest_count, special_instructions, packaging_charge, delivery_charge, service_charge, items, online_platform, external_order_id, delivery_address, delivery_phone, expected_payment_method, expected_payment_method_id, delivery_note, waived_charge_ids, opted_in_charge_ids } = body;
     // Carries optional service charge without automatic calculation policy.
     const idempotencyKey = orderIdempotencyKey(req);
     const idempotencyUserId = String((req as any).user.userId);
@@ -693,6 +693,15 @@ router.post('/', orderWriteRateLimit, requirePermission('orders.create'), (req: 
     // Courier-only details: other order types never store them.
     const isDelivery = type === 'delivery';
     const deliveryNote = isDelivery && typeof delivery_note === 'string' ? delivery_note.trim() || null : null;
+    if (delivery_phone !== undefined && delivery_phone !== null && typeof delivery_phone !== 'string') {
+      return res.status(400).json({ error: 'delivery_phone must be a string' });
+    }
+    // A quick, order-specific number for this delivery — distinct from the
+    // attached customer's own phone, which a cashier may not have set. Free
+    // text like the delivery note and address: a cashier's shorthand or a
+    // local format libphonenumber doesn't recognize must never block placing
+    // the order itself.
+    const deliveryPhone = isDelivery && typeof delivery_phone === 'string' ? delivery_phone.trim() || null : null;
     const onlinePlatform = typeof online_platform === 'string' ? online_platform.trim().slice(0, 100) : null;
     const externalOrderId = typeof external_order_id === 'string' ? external_order_id.trim().slice(0, 100) : null;
     const isOnlineOrder = Boolean(onlinePlatform);
@@ -713,6 +722,7 @@ router.post('/', orderWriteRateLimit, requirePermission('orders.create'), (req: 
     try {
       validateDeliveryAddress(db, deliveryAddress);
       validateDeliveryNote(db, deliveryNote);
+      validateDeliveryPhone(db, deliveryPhone);
       if (isDelivery) {
         // An explicit configured-method identity wins over the string contract:
         // a method literally named "Pending" or "Unknown" would otherwise be
@@ -794,11 +804,11 @@ router.post('/', orderWriteRateLimit, requirePermission('orders.create'), (req: 
       const orderCustomerId = customer_id || reservedCustomerId || null;
 
       const orderResult = db.prepare(`
-        INSERT INTO orders (order_number, table_id, customer_id, user_id, type, delivery_address, expected_payment_method, expected_payment_method_id, delivery_note, guest_count, special_instructions,
+        INSERT INTO orders (order_number, table_id, customer_id, user_id, type, delivery_address, delivery_phone, expected_payment_method, expected_payment_method_id, delivery_note, guest_count, special_instructions,
           packaging_charge, delivery_charge, packaging_tax_category_id, delivery_tax_category_id,
           service_charge, service_charge_tax_category_id, online_platform, external_order_id, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-      `).run(orderNumber, table_id || null, orderCustomerId, authenticatedUserId, type, deliveryAddress,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+      `).run(orderNumber, table_id || null, orderCustomerId, authenticatedUserId, type, deliveryAddress, deliveryPhone,
         expectedPaymentMethod, expectedPaymentMethodId, deliveryNote, guest_count || null, special_instructions || null, pkgCharge, delCharge,
         chargeContext.packaging_tax_category_id, chargeContext.delivery_tax_category_id,
         serviceCharge, chargeContext.service_charge_tax_category_id,

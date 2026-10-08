@@ -21,7 +21,6 @@ import {
   printLabelResolver,
   resolveBillPrintLanguages,
 } from './print-document';
-import { RECEIPT_BRANDING_NAME } from './branding';
 import { LANGUAGES, type Language } from '@/lib/i18n/languages';
 import {
   getBlock,
@@ -43,7 +42,7 @@ export type PaperSize = 'thermal58' | 'thermal80';
 /** The slice of a tenant a browser receipt needs to render locale-correctly. */
 export type ReceiptTenant = Pick<
   Tenant,
-  'business_name' | 'currency' | 'country' | 'timezone' | 'currency_display' | 'number_digits' | 'calendar'
+  'business_name' | 'has_logo' | 'currency' | 'country' | 'timezone' | 'currency_display' | 'number_digits' | 'calendar'
 >;
 
 /** Encodes HTML entity characters so database-sourced values can't inject markup/scripts into the bill print window. */
@@ -76,6 +75,8 @@ export interface WebPrintOptions {
   footerNote?: string;
   businessName?: string;
   showBusinessName?: boolean;
+  /** Absolute URL serving the business logo (e.g. `/api/settings/logo`); omitted when none is configured. */
+  logoUrl?: string;
   showTaxBreakdown?: boolean;
   showCustomerName?: boolean;
   showCustomerPhone?: boolean;
@@ -234,6 +235,7 @@ export function generateBillHtml(
     phone,
     footerNote,
     businessName,
+    logoUrl,
     showBusinessName = true,
     showTaxBreakdown = true,
     showCustomerName = true,
@@ -280,7 +282,9 @@ export function generateBillHtml(
   const messages = getBlock(document, 'message') as MessageBlock | undefined;
 
   // Presentation labels come from the document or fallback to shared catalog.
-  const metaTableLabel = documentLabel(meta?.table?.label, 'pos.tableLabel', lang);
+  // Resolved only when a table exists: the catalog string requires a {name}
+  // variable, and `FORMATTING_ERROR`s on a no-table order otherwise (#bug).
+  const metaTableLabel = meta?.table ? documentLabel(meta.table.label, 'pos.tableLabel', lang) : '';
   const L = {
     billNumber: documentLabel(meta?.billNumberLabel, 'receipt.billNumber', lang),
     date: documentLabel(meta?.dateLabel, 'receipt.date', lang),
@@ -335,6 +339,7 @@ export function generateBillHtml(
     ${messages?.onlineOrderBanner ? `<div class="online-order-banner">${escapeHtml(messages.onlineOrderBanner.label.primary)}${messages.onlineOrderBanner.platform.text ? `<div class="online-order-detail">${escapeHtml(messages.onlineOrderBanner.platform.text)}</div>` : ''}${messages.onlineOrderBanner.externalOrderId.text ? `<div class="online-order-detail">#${escapeHtml(messages.onlineOrderBanner.externalOrderId.text)}</div>` : ''}</div>` : ''}
     <!-- Header -->
     <div class="header">
+      ${logoUrl ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="">` : ''}
       ${header?.name ? `<h1>${escapeHtml(header.name.text)}</h1>` : ''}
       ${header?.address ? `<p>${escapeHtml(header.address.text).replace(/\n/g, '<br>')}</p>` : ''}
       ${header?.phone && header.phoneLabel ? `<p>${escapeHtml(header.phoneLabel.primary)}: ${directionalValue(header.phone, base)}</p>` : ''}
@@ -400,7 +405,7 @@ export function generateBillHtml(
     <table class="totals-table">
       ${totals ? `
       ${totals.pointsRedeemed ? `<tr><td>${escapeHtml(totals.pointsRedeemed.label.primary)}</td><td class="text-end num">-${escapeHtml(totals.pointsRedeemed.points)} pts</td></tr>` : ''}
-      <tr><td>${escapeHtml(totals.subtotal.label.primary)}</td><td class="text-end num">${fmtAmount(totals.subtotal.amount)}</td></tr>
+      ${totals.subtotal ? `<tr><td>${escapeHtml(totals.subtotal.label.primary)}</td><td class="text-end num">${fmtAmount(totals.subtotal.amount)}</td></tr>` : ''}
       ${totals.discount ? `<tr><td>${escapeHtml(totals.discount.label.primary)}</td><td class="text-end num">-${fmtAmount(totals.discount.amount)}</td></tr>` : ''}
       ${totals.tax ? `<tr><td>${escapeHtml(L.totalTax)}</td><td class="text-end num">${fmtAmount(totals.tax.amount)}</td></tr>` : ''}
       ${totals.serviceCharge && !itemisedChargeIds.has('service_charge') ? `<tr><td>${escapeHtml(totals.serviceCharge.label.primary)}</td><td class="text-end num">${fmtAmount(totals.serviceCharge.amount)}</td></tr>` : ''}
@@ -431,7 +436,6 @@ export function generateBillHtml(
     <div class="footer">
       ${messages?.footerNote ? `<p>${escapeHtml(messages.footerNote.text)}</p>` : `<p>${escapeHtml(L.thankYou)}</p>`}
       ${hasTax ? `<p>${escapeHtml(L.taxIncluded)}</p>` : ''}
-      <p class="powered-by">${escapeHtml(RECEIPT_BRANDING_NAME)}</p>
     </div>
   </div>
 
@@ -494,6 +498,7 @@ function getPaperStyles(size: PaperSize): string {
     .online-order-banner .online-order-detail { font-size: 13px; font-weight: normal; letter-spacing: normal; margin-top: 2px; }
     .header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
     .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .header .logo { max-width: 120px; max-height: 120px; margin: 0 auto 8px; display: block; }
     .bill-details { margin-bottom: 15px; }
     .bill-details table { width: 100%; }
     .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
@@ -506,7 +511,6 @@ function getPaperStyles(size: PaperSize): string {
     .totals-table td { padding: 6px 8px; }
     .total-row { border-top: 2px solid #333; font-size: 16px; }
     .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ccc; }
-    .powered-by { font-size: 10px; margin-top: 8px; color: #555; }
     .text-end { text-align: end !important; }
     .num { unicode-bidi: isolate; white-space: nowrap; }
     .ltr { direction: ltr; unicode-bidi: isolate; }

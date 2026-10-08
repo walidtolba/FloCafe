@@ -80,7 +80,7 @@ type PaperWidth = 58 | 80;
 /** Tenant fields a browser/thermal receipt needs for locale-correct rendering. */
 type ReceiptTenant = Pick<
   Tenant,
-  'business_name' | 'currency' | 'country' | 'timezone' | 'currency_display' | 'number_digits' | 'calendar'
+  'business_name' | 'has_logo' | 'currency' | 'country' | 'timezone' | 'currency_display' | 'number_digits' | 'calendar'
 >;
 
 export interface HardwarePrinter {
@@ -207,6 +207,7 @@ export const usePrinterStore = create<PrinterState>()(
               phone: billShowPhone && billPhone ? billPhone : undefined,
               footerNote: billFooterMessage || undefined,
               businessName: tenant.business_name,
+              logoUrl: tenant.has_logo ? `${api.defaults.baseURL}/settings/logo` : undefined,
               showBusinessName: billShowName,
               showTaxBreakdown: billShowTaxBreakdown,
               showCustomerName: billShowCustomerName,
@@ -397,6 +398,7 @@ export const usePrinterStore = create<PrinterState>()(
               phone: billShowPhone ? (opts?.phone || billPhone || undefined) : undefined,
               footerNote: billFooterMessage || undefined,
               businessName: tenant.business_name,
+              logoUrl: tenant.has_logo ? `${api.defaults.baseURL}/settings/logo` : undefined,
               showBusinessName: billShowName,
               showTaxBreakdown: billShowTaxBreakdown,
               showCustomerName: billShowCustomerName,
@@ -455,7 +457,7 @@ export const usePrinterStore = create<PrinterState>()(
       printKot: async (order, opts) => {
         set({ lastError: null });
         // Enforce master kot_printing_enabled toggle for all automatic and manual prints.
-        const { kotPrintingEnabled, printerUseUnicode, printerArabicShaping } = usePosSettingsStore.getState();
+        const { kotPrintingEnabled, printerUseUnicode, printerArabicShaping, billShowCustomerPhone, billDeliveryShowCustomerPhoneAlways } = usePosSettingsStore.getState();
         const tenant = useAuthStore.getState().currentTenant;
         const tenantTimezone = tenant?.timezone;
         const tenantLocale = getCountryByCode(tenant?.country ?? '')?.locale ?? 'en-US';
@@ -507,7 +509,7 @@ export const usePrinterStore = create<PrinterState>()(
             }
             const bytes = buildKotBytes(
               rasterOrder,
-              { ...opts, paperWidth, columns: kotColumns, stationName: opts?.stationName, arabicShaping: printerArabicShaping, language: kotLanguage, timezone: tenantTimezone ?? opts?.timezone, capabilities: nativeFallbackCapabilities(get().webusbPrinter?.capabilities) },
+              { ...opts, paperWidth, columns: kotColumns, stationName: opts?.stationName, arabicShaping: printerArabicShaping, language: kotLanguage, timezone: tenantTimezone ?? opts?.timezone, capabilities: nativeFallbackCapabilities(get().webusbPrinter?.capabilities), showCustomerPhone: billShowCustomerPhone, deliveryShowCustomerPhoneAlways: billDeliveryShowCustomerPhoneAlways },
               encoderWarnings,
             );
             let output = bytes;
@@ -522,6 +524,8 @@ export const usePrinterStore = create<PrinterState>()(
                     stationName: opts?.stationName ?? 'Kitchen',
                     columns: kotColumns,
                     language: kotLanguage,
+                    showCustomerPhone: billShowCustomerPhone,
+                    deliveryShowCustomerPhoneAlways: billDeliveryShowCustomerPhoneAlways,
                     ...(tenantTimezone ?? opts?.timezone ? { timezone: tenantTimezone ?? opts?.timezone } : {}),
                   }),
                   profileId: webusbPrinter.profile_id,

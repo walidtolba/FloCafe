@@ -34,6 +34,8 @@ import {
   getChargeDefinitions,
   normalizeChargeDefinitions,
 } from '../services/charges';
+import { validateImageDataUri, decodeImageDataUri } from '../lib/image-data-uri';
+import * as crypto from 'crypto';
 
 const router = Router();
 const configuredSettingsReadLimit = Number.parseInt(process.env.FLO_SETTINGS_READ_RATE_LIMIT_MAX || '', 10);
@@ -129,6 +131,9 @@ function publicSettingsShape(settings: Record<string, string>): Record<string, s
   const publicSettings: Record<string, string> = {};
   for (const [key, value] of Object.entries(settings)) {
     if (isGoogleDriveSettingKey(key)) continue;
+    // Served via GET /settings/logo instead — keeps this frequently-polled
+    // endpoint from carrying a Base64 image blob on every fetch.
+    if (key === 'business_logo') continue;
     publicSettings[key] = maskSetting(key, value);
   }
   return publicSettings;
@@ -172,6 +177,7 @@ function businessShape(s: Record<string, string>) {
     business_address: s.business_address || '',
     business_phone: s.business_phone || '',
     instagram_handle: s.instagram_handle || '',
+    has_logo: Boolean(s.business_logo),
     billing_type: s.billing_type || 'postpaid',
     tables_required: s.tables_required !== 'false',
     tax_registered: s.tax_registered === 'true' || s.tax_registered === '1',
@@ -219,11 +225,18 @@ router.put('/business', requirePermission('settings.manage'), (req: Request, res
   try {
     const { business_name, timezone, business_day_start_time, currency, country, language,
       tax_registration_number, state_code, business_address, business_phone, instagram_handle,
+      business_logo,
       billing_type, tables_required, tax_registered,
       bill_show_name, bill_show_address, bill_show_phone, bill_show_tax_id,
       bill_show_tax_breakdown, bill_show_customer_name, bill_show_customer_phone, bill_show_table_number,
       bill_delivery_show_customer_phone_always,
       currency_display, number_digits, calendar } = req.body;
+    if (business_logo !== undefined) {
+      const logoValidation = validateImageDataUri(business_logo);
+      if (!logoValidation.valid) {
+        return res.status(400).json({ error: logoValidation.error });
+      }
+    }
     const normalizedCurrency = typeof currency === 'string' ? currency.trim().toUpperCase() : currency;
     const normalizedInstagramHandle = instagram_handle !== undefined
       ? String(instagram_handle || '').trim().slice(0, 100)
@@ -297,6 +310,7 @@ router.put('/business', requirePermission('settings.manage'), (req: Request, res
       tax_registration_number, state_code, business_address,
       business_phone: normalizedPhone !== undefined ? normalizedPhone : undefined,
       instagram_handle: normalizedInstagramHandle,
+      business_logo,
       billing_type, tables_required, tax_registered,
       bill_show_name, bill_show_address, bill_show_phone, bill_show_tax_id,
       bill_show_tax_breakdown, bill_show_customer_name, bill_show_customer_phone, bill_show_table_number,
@@ -308,6 +322,39 @@ router.put('/business', requirePermission('settings.manage'), (req: Request, res
     cloudSync.refreshRegistrationProfile();
 
     res.json(businessShape(getAllSettings(db)));
+  } catch (error: any) {
+    console.error("[API] Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /logo — serves the decoded business logo image. No permission gate beyond
+// standard auth: shown to every staff role in the sidebar, same as the business name.
+router.get('/logo', (req: Request, res: Response) => {
+  try {
+    const logo = getSettingValue('business_logo');
+    if (!logo || !logo.startsWith('data:')) {
+      return res.status(404).json({ error: 'No logo' });
+    }
+
+    const decoded = decodeImageDataUri(logo);
+    if (!decoded) {
+      return res.status(404).json({ error: 'No logo' });
+    }
+    const { contentType, buffer, base64 } = decoded;
+
+    const etag = crypto.createHash('sha256').update(base64).digest('hex');
+    if (req.headers['if-none-match'] === `"${etag}"`) {
+      return res.status(304).end();
+    }
+
+    res.set({
+      'Content-Type': contentType,
+      'Content-Length': buffer.length,
+      'ETag': `"${etag}"`,
+      'Cache-Control': 'no-cache',
+    });
+    res.send(buffer);
   } catch (error: any) {
     console.error("[API] Internal error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -984,6 +1031,9 @@ const ALLOWED_WILDCARD_KEYS = new Set([
  */
 const DEDICATED_SETTING_KEYS = new Set<string>([
   CUSTOM_CHARGES_SETTING_KEY,
+  // `business_logo` needs image-format/size validation the wildcard route
+  // cannot do; it is only writable through PUT /settings/business.
+  'business_logo',
 ]);
 
 function isAllowedWildcardKey(key: string): boolean {

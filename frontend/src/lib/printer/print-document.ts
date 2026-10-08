@@ -136,11 +136,17 @@ export function buildBillPrintData(bill: Bill, opts: BillBusinessOptions = {}): 
   const order = bill.order;
   const billCustomer = (bill as Bill & { customer?: { name?: unknown; phone?: unknown; country_code?: unknown } }).customer;
   const customer = opts.useBillCustomer === true ? billCustomer ?? order?.customer : order?.customer;
-  const customerPhone = String(customer?.phone ?? '');
+  const customerPhoneRaw = String(customer?.phone ?? '');
   const customerCountryCode = String(customer?.country_code ?? '');
-  const rasterCustomerPhone = customerCountryCode && customerPhone && !customerPhone.startsWith(customerCountryCode)
-    ? `${customerCountryCode} ${customerPhone}`
-    : customerPhone;
+  const rasterCustomerPhoneFromCustomer = customerCountryCode && customerPhoneRaw && !customerPhoneRaw.startsWith(customerCountryCode)
+    ? `${customerCountryCode} ${customerPhoneRaw}`
+    : customerPhoneRaw;
+  // The order's own typed-in delivery phone wins over the attached customer's
+  // phone. It is free text exactly as the cashier typed it, so it skips the
+  // country-code prefixing that a bare customer.phone column needs.
+  const deliveryPhone = String(order?.delivery_phone ?? '').trim();
+  const customerPhone = deliveryPhone || customerPhoneRaw;
+  const rasterCustomerPhone = deliveryPhone || rasterCustomerPhoneFromCustomer;
   const items = order?.items ?? [];
 
   const showTaxId = opts.includeTaxId === true && !!opts.taxRegistrationNumber;
@@ -273,6 +279,9 @@ export function buildFrontendKotDocument(
     columns: number;
     language: string;
     timezone?: string;
+    /** Same visibility rule as bills/delivery slips; both default true. */
+    showCustomerPhone?: boolean;
+    deliveryShowCustomerPhoneAlways?: boolean;
   },
 ): KotDocument {
   const orderShape = order as Order & {
@@ -303,14 +312,26 @@ export function buildFrontendKotDocument(
   };
   const languages = [opts.language] as ResolvedPrintLanguages;
   const items = opts.items ?? order.items ?? [];
+  const orderType = String(order.type ?? '').trim();
+  // Reuses the same customer-number visibility rule as bills/delivery slips
+  // (docs/reference/product-invariants.md) rather than a KOT-specific setting.
+  const showCustomerPhone = shouldShowCustomerNumber({
+    showOnReceipts: opts.showCustomerPhone !== false,
+    alwaysForDeliveryOrders: opts.deliveryShowCustomerPhoneAlways !== false,
+    orderType,
+  });
+  // The order's own typed-in delivery phone wins over the attached
+  // customer's phone: it is the number entered for this specific delivery.
+  const customerPhone = showCustomerPhone ? firstText(order.delivery_phone, order.customer?.phone) : '';
   const printData: KotPrintData = {
     stationName: String(opts.stationName ?? ''),
     order: {
       orderNumber: String(order.order_number ?? ''),
       createdAt: String(order.created_at ?? ''),
       tableName: firstText(order.table?.name, orderShape.table_name, orderShape.tableName),
-      orderType: String(order.type ?? '').trim(),
+      orderType,
       customerName: firstText(order.customer?.name, orderShape.customer_name, orderShape.customerName),
+      ...(customerPhone ? { customerPhone } : {}),
     },
     items: items.filter((item) => isKotItemPending(item.status)).map((item) => ({
       productName: formatItemHeading(String(item.product_name ?? ''), item.variant_selection),

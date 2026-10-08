@@ -712,6 +712,41 @@ async function run() {
     );
   }
 
+  console.log('\nTest Suite 8: No-table orders (takeaway/delivery) never crash the browser bill');
+  {
+    // Regression: generateBillHtml unconditionally resolved the "Table: {name}"
+    // catalog string even when the order has no table, and next-intl throws
+    // FORMATTING_ERROR for an ICU string missing its {name} variable — crashing
+    // every takeaway/delivery checkout's auto-print with no visible error.
+    const noTableOrder = { ...testIranOrder, table: undefined };
+    const noTableBill: Bill = { ...testIranBill, order: noTableOrder };
+    const usTenant = {
+      business_name: 'FloCafe New York',
+      currency: 'USD',
+      country: 'US',
+      timezone: 'America/New_York',
+    };
+    let noTableHtml = '';
+    let threw: unknown = null;
+    try {
+      noTableHtml = generateBillHtml(noTableBill, usTenant, { language: 'en' });
+    } catch (err) {
+      threw = err;
+    }
+    assert('a no-table bill renders without throwing', threw === null, threw ? String(threw) : undefined);
+    assert('the table row is simply omitted, not rendered empty', !noTableHtml.includes('Table:'));
+
+    for (const lang of ['en', 'fa', 'ar', 'es'] as const) {
+      let langThrew: unknown = null;
+      try {
+        generateBillHtml(noTableBill, usTenant, { language: lang });
+      } catch (err) {
+        langThrew = err;
+      }
+      assert(`a no-table bill in "${lang}" renders without throwing`, langThrew === null, langThrew ? String(langThrew) : undefined);
+    }
+  }
+
   // Generate Reviewer-Visible Artifacts (HTML & Screenshots via Playwright)
   console.log('\n==================================================');
   console.log('Generating Visual and HTML Artifacts in Evidence Dir:');

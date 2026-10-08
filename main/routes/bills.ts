@@ -2194,7 +2194,16 @@ function applyPaymentBatch(
     db, billId, payments, bodyCustomerId, allowOmittedAmount,
   );
   if (idempotentReplay) {
-    return { bill: parseRowJson(db.prepare('SELECT * FROM bills WHERE id = ?').get(billId)), walletDebited: false, loyaltyPointsEarned: 0 };
+    const replayBill = parseRowJson(db.prepare('SELECT * FROM bills WHERE id = ?').get(billId)) as any;
+    return {
+      bill: {
+        ...replayBill,
+        order: getOrderWithItems(db, replayBill.order_id, Number(billId)),
+        customer: replayBill.customer_id ? db.prepare('SELECT * FROM customers WHERE id = ?').get(replayBill.customer_id) : null,
+      },
+      walletDebited: false,
+      loyaltyPointsEarned: 0,
+    };
   }
   const kitchenStatus = checkKitchenDeliveryStatus(db, bill.order_id, overridePin, clientIp, bill.id);
   if (!kitchenStatus.allowed) {
@@ -2276,8 +2285,13 @@ function applyPaymentBatch(
       }
     }
   }
+  const paidBillRow = parseRowJson(db.prepare('SELECT * FROM bills WHERE id = ?').get(billId)) as any;
   const result = {
-    bill: parseRowJson(db.prepare('SELECT * FROM bills WHERE id = ?').get(billId)),
+    bill: {
+      ...paidBillRow,
+      order: getOrderWithItems(db, bill.order_id, Number(billId)),
+      customer: paidBillRow.customer_id ? db.prepare('SELECT * FROM customers WHERE id = ?').get(paidBillRow.customer_id) : null,
+    },
     walletDebited,
     loyaltyPointsEarned,
     ...(kitchenStatus.overridden ? { kitchenDeliveryOverridden: true } : {}),

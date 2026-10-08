@@ -669,11 +669,13 @@ router.post('/print-bill', requirePermission('printing.execute'), asyncHandler(a
       country,
       instagram_handle: settings.instagram_handle || '',
       customer_name: customer?.name || '',
-      customer_phone: customer?.phone
+      // The phone typed in for this delivery wins over the customer's
+      // standing record, the same precedence the delivery slip uses.
+      customer_phone: order?.delivery_phone || (customer?.phone
         ? (customer.country_code && !customer.phone.startsWith(customer.country_code)
            ? `${customer.country_code} ${customer.phone}`
            : customer.phone)
-        : '',
+        : ''),
       // One shared rule, so the receipt and the slip cannot disagree.
       show_customer_phone: shouldShowCustomerNumber({
         showOnReceipts: settings.bill_show_customer_phone !== 'false',
@@ -834,8 +836,8 @@ router.post('/print-kot', requirePermission('printing.execute'), asyncHandler(as
       }
     }
     if (order.customer_id) {
-      const customer = db.prepare('SELECT name FROM customers WHERE id = ?').get(order.customer_id) as { name: string } | null;
-      if (customer) order.customer = { name: customer.name };
+      const customer = db.prepare('SELECT name, phone FROM customers WHERE id = ?').get(order.customer_id) as { name: string; phone?: string } | null;
+      if (customer) order.customer = { name: customer.name, phone: customer.phone };
     }
 
     // Specific station prints one ticket; unassigned item overrides route by station.
@@ -939,11 +941,14 @@ router.post('/print-delivery-slip', requirePermission('printing.execute'), async
     const customer: { name?: string; phone?: string; country_code?: string; address?: string } | undefined = order.customer_id
       ? db.prepare('SELECT name, phone, country_code, address FROM customers WHERE id = ?').get(order.customer_id) as { name?: string; phone?: string; country_code?: string; address?: string }
       : undefined;
-    const phone = customer?.phone
+    const customerPhone = customer?.phone
       ? (customer.country_code && !customer.phone.startsWith(customer.country_code)
         ? `${customer.country_code} ${customer.phone}`
         : customer.phone)
       : '';
+    // The phone typed in for this delivery wins over the customer's standing
+    // record, the same precedence the address above already uses.
+    const phone = order.delivery_phone || customerPhone;
 
     const language = resolveTenantReceiptLanguages(db).primary;
     // The delivery exception, or the receipt setting when it is off. Blank only

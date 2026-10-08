@@ -5788,6 +5788,17 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
       }
     },
   },
+  {
+    version: 108,
+    name: 'add_order_delivery_phone',
+    up: () => {
+      // A fresh install gets this column from the CREATE TABLE, so the ALTER is
+      // guarded the way the sibling delivery_address/delivery_note columns are.
+      if (!getColumns(db, 'orders').includes('delivery_phone')) {
+        db.exec(`ALTER TABLE orders ADD COLUMN delivery_phone TEXT DEFAULT NULL`);
+      }
+    },
+  },
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {
@@ -6081,6 +6092,7 @@ function createSchema(): void {
       user_id TEXT,
       type TEXT DEFAULT 'takeaway',
       delivery_address TEXT DEFAULT NULL,
+      delivery_phone TEXT DEFAULT NULL,
       expected_payment_method TEXT DEFAULT NULL,
       delivery_note TEXT DEFAULT NULL,
       guest_count INTEGER,
@@ -6546,6 +6558,7 @@ function seedInstallDefaults(): void {
   insert('business_address', '');
   insert('business_phone', '');
   insert('instagram_handle', '');
+  insert('business_logo', '');
   insert('tax_registered', 'false');
   insert('tax_registration_number', '');
   insert('state_code', '');

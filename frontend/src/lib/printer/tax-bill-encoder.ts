@@ -2,13 +2,12 @@
 import ReceiptPrinterEncoder from '@point-of-sale/receipt-printer-encoder';
 import type { Bill, Tenant } from '@/lib/types';
 import { normalizeCurrencyToAscii, normalizeThermalText, padCurrencyPrefix } from './unicode';
-import { columnsForReceiptPaperSize, displayCellWidth, fitThermalLine, graphemeSegments, truncateToDisplayCells, truncateToDisplayCellsFromEnd } from '@print/width';
+import { columnsForReceiptPaperSize, displayCellWidth, graphemeSegments, truncateToDisplayCells, truncateToDisplayCellsFromEnd } from '@print/width';
 import { getCountryByCode, getCurrencyFractionDigits, getCurrencySymbol, resolveTenantCurrency } from '@/lib/countries';
 import { formatDate } from './format-date';
 import { shouldShowCustomerNumber } from '@print/document';
 import { formatTaxComponentLabel, resolveTaxComponents } from './tax-components';
 import { hasUnsupportedPrinterChars, isArabicShapingSafeLine, safePrinterText as writeSafePrinterText, wrapPrinterText, type PrintWarning } from './warnings';
-import { RECEIPT_BRANDING_NAME } from './branding';
 import { printLabelResolver } from './print-document';
 import { formatItemHeading } from './item-heading';
 import { GENERIC_THERMAL_CAPABILITIES, isThermalTextRepresentable, selectThermalCodePage, type ThermalPrinterCapabilities } from '@print/thermal-capabilities';
@@ -56,16 +55,6 @@ export interface TaxBillOptions {
 // Paper-size fallback only. Callers that know the configured printer pass
 // `columns`; the number itself lives in `columnsForReceiptPaperSize`.
 const CHARS: Record<58 | 80, number> = { 58: columnsForReceiptPaperSize(58), 80: columnsForReceiptPaperSize(80) };
-
-function printPoweredByFooter(enc: ReceiptPrinterEncoder, columns: number): void {
-  enc
-    .align('center')
-    .size('small')
-    .text(fitThermalLine(RECEIPT_BRANDING_NAME, columns))
-    .newline()
-    .size('normal')
-    .align('left');
-}
 
 /** Mask phone number for receipt display — shows only last 4 digits. */
 function maskPhoneOnReceipt(phone: string): string {
@@ -243,8 +232,11 @@ export function buildTaxBillBytes(
     alwaysForDeliveryOrders: deliveryShowCustomerPhoneAlways !== false,
     orderType: String(order?.type ?? ''),
   });
-  if (phoneVisible && order?.customer?.phone) {
-    safePrinterText(enc, `${labelFor('print.numberShort')}: ${maskPhoneOnReceipt(order.customer.phone)}`, warnings, false, arabicShaping, undefined, cols, language).newline();
+  // The order's own typed-in delivery phone wins over the attached
+  // customer's phone: it is the number entered for this specific delivery.
+  const customerPhoneForBill = order?.delivery_phone || order?.customer?.phone;
+  if (phoneVisible && customerPhoneForBill) {
+    safePrinterText(enc, `${labelFor('print.numberShort')}: ${maskPhoneOnReceipt(customerPhoneForBill)}`, warnings, false, arabicShaping, undefined, cols, language).newline();
   }
   if (deliveryAddress.length > 0) {
     // Wrapped, not truncated: a shaped printer writes raw bytes and would
@@ -304,9 +296,9 @@ export function buildTaxBillBytes(
   // ── Totals ───────────────────────────────────────────────────────────────
   enc.rule({ style: 'single' });
 
-  const totals: [string, string][] = [
-    [labelFor('pos.subtotal'), formatAmount(bill.subtotal, currency, amountLocale, trimDecimals, rawEscPos)],
-  ];
+  const totals: [string, string][] = bill.subtotal !== bill.total
+    ? [[labelFor('pos.subtotal'), formatAmount(bill.subtotal, currency, amountLocale, trimDecimals, rawEscPos)]]
+    : [];
 
   if (Number(bill.discount_amount) > 0) {
     totals.push([labelFor('pos.discount'), `-${formatAmount(bill.discount_amount, currency, amountLocale, trimDecimals, rawEscPos)}`]);
@@ -351,7 +343,6 @@ export function buildTaxBillBytes(
       safePrinterText(enc, labelFor('receipt.taxIncluded'), warnings, false, arabicShaping, undefined, undefined, language).newline();
     }
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 

@@ -75,13 +75,15 @@ function buildOrder(): any {
 function buildBill(): any {
   return {
     bill_number: 'INV-LABELS-001',
+    // Subtotal is kept distinct from total (via tax_amount) so the Subtotal
+    // row renders — it is omitted whenever the two are equal.
     subtotal: 250,
     discount_amount: 0,
-    tax_amount: 0,
+    tax_amount: 25,
     service_charge: 0,
     delivery_charge: 0,
-    total: 250,
-    payment_details: [{ method: 'cash', amount: 250 }],
+    total: 275,
+    payment_details: [{ method: 'cash', amount: 275 }],
   };
 }
 

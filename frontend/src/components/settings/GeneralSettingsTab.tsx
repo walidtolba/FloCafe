@@ -24,6 +24,7 @@ import { useAuthStore } from '@/store/auth';
 import { LANGUAGES, TENANT_STATUS_LABEL_KEYS, type Language } from '@/lib/i18n';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import LogoUploader from '@/components/settings/LogoUploader';
 
 const SELECTABLE_LANGUAGES: Language[] = (Object.keys(LANGUAGES) as Language[]).filter(
   (lang) => LANGUAGES[lang].selectable,
@@ -74,6 +75,8 @@ export interface BusinessForm {
   businessPhone: string;
   businessAddress: string;
   instagramHandle: string;
+  /** Base64 data URI, 'EXISTING' (stored, unchanged), or null (no logo / cleared). */
+  businessLogo: string | null;
 }
 
 export interface OrderNumberForm {
@@ -188,6 +191,19 @@ export function GeneralSettingsTab({
               <p className="font-medium text-foreground">{form.businessName || currentTenant?.business_name}</p>
             )}
           </div>
+          {isAdmin && (
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">{t('businessLogo')}</label>
+              <LogoUploader
+                value={form.businessLogo}
+                previewUrl={`${api.defaults.baseURL}/settings/logo`}
+                onChange={(val) => {
+                  markHydrationTouched('businessLogo');
+                  setForm((p) => ({ ...p, businessLogo: val }));
+                }}
+              />
+            </div>
+          )}
           {/* Country, Timezone, Currency in single line with individual headings */}
           <div className="md:col-span-2 space-y-2">
             {/* Headings */}

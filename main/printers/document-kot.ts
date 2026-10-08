@@ -38,19 +38,29 @@ import {
 
 // Normalization (caller-side, main-process layer).
 
-/** Normalize raw order/items/station rows into an authoritative KOT snapshot. */
-export function buildKotPrintData(order: any, items: any[], stationName: string): KotPrintData {
+/**
+ * Normalize raw order/items/station rows into an authoritative KOT snapshot.
+ * Pure — takes customer-phone visibility as an already-resolved flag rather
+ * than reading settings itself, so it stays callable without a live database
+ * (e.g. tests/print-parity.test.ts exercises this directly).
+ */
+export function buildKotPrintData(order: any, items: any[], stationName: string, opts: { showCustomerPhone?: boolean } = {}): KotPrintData {
   const ticketItems = Array.isArray(items)
     ? items.filter((item: any) => isKotItemPending(item?.status))
     : [];
+  const orderType = String(order?.type ?? '').trim();
+  // The order's own typed-in delivery phone wins over the attached
+  // customer's phone: it is the number entered for this specific delivery.
+  const customerPhone = opts.showCustomerPhone ? String(order?.delivery_phone ?? order?.customer?.phone ?? '').trim() : '';
   return {
     stationName: String(stationName ?? ''),
     order: {
       orderNumber: String(order?.order_number ?? ''),
       createdAt: String(order?.created_at ?? ''),
       tableName: String(order?.table?.name ?? ''),
-      orderType: String(order?.type ?? '').trim(),
+      orderType,
       customerName: String(order?.customer?.name ?? order?.customer_name ?? '').trim(),
+      ...(customerPhone ? { customerPhone } : {}),
     },
     items: ticketItems.map((item: any) => ({
       productName: formatVariantItemHeading(
@@ -228,6 +238,18 @@ function kotHeaderLines(header: KotHeaderBlock, options: KotDocumentRenderOption
     sourceLines?.push(`${labelOf(header.customer.label)}: ${header.customer.name.text}`);
     sourceControlLines?.push(lines.at(-1) ?? '');
   }
+  if (header.customerPhone) {
+    const customerPhone = thermalSafeText(
+      `${labelOf(header.customerPhone.label)}: ${header.customerPhone.value.text}`,
+      `Phone: ${thermalSafeMetadataValue(header.customerPhone.value.text, options.language, options.arabicShaping, options.capabilities)}`,
+      options.language,
+      options.arabicShaping,
+      options.capabilities,
+    );
+    lines.push(truncateShapedLine(customerPhone, cols, options.arabicShaping, options.language, options.capabilities));
+    sourceLines?.push(`${labelOf(header.customerPhone.label)}: ${header.customerPhone.value.text}`);
+    sourceControlLines?.push(lines.at(-1) ?? '');
+  }
   lines.push(truncateShapedLine(timeLine, cols, options.arabicShaping, options.language, options.capabilities));
   sourceLines?.push(`${labelOf(header.timeLabel)}: ${time}`);
   sourceControlLines?.push(lines.at(-1) ?? '');
@@ -331,9 +353,11 @@ export function renderKotViaDocument(
     arabicShaping: boolean;
     cutMode: PrinterCutMode;
     capabilities?: import('../../shared/print/thermal-capabilities').ThermalPrinterCapabilities;
+    /** Caller-resolved customer-number visibility (same rule as bills/delivery slips). */
+    showCustomerPhone?: boolean;
   },
 ): KotDocumentRenderResult {
-  const printData = buildKotPrintData(order, items, stationName);
+  const printData = buildKotPrintData(order, items, stationName, { showCustomerPhone: opts.showCustomerPhone });
   const printContext = buildKotPrintContext({
     columns: opts.columns,
     language: opts.language,

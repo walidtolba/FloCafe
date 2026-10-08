@@ -10,6 +10,7 @@ import * as dns from 'dns';
 import * as https from 'https';
 import * as net from 'net';
 import { asyncHandler } from '../middleware/async-handler';
+import { validateImageDataUri, decodeImageDataUri } from '../lib/image-data-uri';
 
 const MAX_FETCH_BYTES = 10 * 1024 * 1024;
 
@@ -148,27 +149,6 @@ function fetchPinnedHttps(
     request.on('error', (error) => finish(error));
     request.end();
   });
-}
-
-/** Validates image data URI format (webp/png/jpeg) and length limit. */
-function validateImageUrl(imageUrl: any): { valid: boolean; error?: string } {
-  if (imageUrl === null || imageUrl === undefined) {
-    return { valid: true }; // null means "clear the image"
-  }
-  if (typeof imageUrl !== 'string') {
-    return { valid: false, error: 'image_url must be a string or null' };
-  }
-  if (!imageUrl.startsWith('data:image/')) {
-    return { valid: false, error: 'image_url must be a Base64 data URI' };
-  }
-  const formatMatch = imageUrl.match(/^data:image\/(webp|png|jpeg|jpg);base64,/);
-  if (!formatMatch) {
-    return { valid: false, error: 'Invalid image format. Supported: webp, png, jpeg' };
-  }
-  if (imageUrl.length > 50_000) {
-    return { valid: false, error: 'Image too large (max 50,000 characters)' };
-  }
-  return { valid: true };
 }
 
 /** Batch loads category and addon group relations for a list of products. */
@@ -1000,23 +980,15 @@ router.get('/:id/image', asyncHandler(async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No image' });
     }
 
-    // Parse data URI and restrict to permitted image mime types.
-    const match = imageUrl.match(/^data:(image\/(webp|png|jpeg|jpg));base64,(.+)$/);
-    if (!match) {
+    const decoded = decodeImageDataUri(imageUrl);
+    if (!decoded) {
       return res.status(404).json({ error: 'No image' });
     }
-
-    const contentType = match[1]; // e.g., "image/webp"
-    const base64Data = match[3];  // group 2 is the extension, group 3 is the base64 data
-
-    const buffer = Buffer.from(base64Data, 'base64');
-    if (buffer.length === 0) {
-      return res.status(404).json({ error: 'No image' });
-    }
+    const { contentType, buffer, base64 } = decoded;
 
     // ETag based on SHA-256 content hash (same perf as MD5 at this size,
     // avoids future "why MD5?" questions in code review)
-    const etag = crypto.createHash('sha256').update(base64Data).digest('hex');
+    const etag = crypto.createHash('sha256').update(base64).digest('hex');
 
     // If client already has this version, return 304
     if (req.headers['if-none-match'] === `"${etag}"`) {
@@ -1228,7 +1200,7 @@ router.post('/', requirePermission('catalog.manage'), (req: Request, res: Respon
     }
 
     // Validate image_url at write time (server-side security boundary)
-    const imageValidation = validateImageUrl(image_url);
+    const imageValidation = validateImageDataUri(image_url);
     if (!imageValidation.valid) {
       return res.status(400).json({ error: imageValidation.error });
     }
@@ -1399,7 +1371,7 @@ router.put('/:id', requirePermission('catalog.manage'), (req: Request, res: Resp
 
     // Validate image_url at write time (server-side security boundary)
     if ('image_url' in req.body) {
-      const imageValidation = validateImageUrl(image_url);
+      const imageValidation = validateImageDataUri(image_url);
       if (!imageValidation.valid) {
         return res.status(400).json({ error: imageValidation.error });
       }

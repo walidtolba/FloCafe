@@ -395,6 +395,7 @@ function sanitizeOrderSnapshot(value: unknown): unknown {
   // PII: the snapshot is a SELECT * spread, so a new free-text address or
   // courier-note column leaves the machine unless it is named here. Tests enforce that.
   delete safe.delivery_address;
+  delete safe.delivery_phone;
   delete safe.delivery_note;
   delete safe.special_instructions;
   delete safe.discount_reason;

@@ -60,6 +60,7 @@ import {
   optionalPaymentAmount,
   projectCashTender,
   selectBilingualFit,
+  shouldShowCustomerNumber,
   thermalDisplayWidth,
   type SemanticLabel,
   type ThermalLayoutContext,
@@ -934,6 +935,13 @@ export async function printKOT(order: any, items: any[], stationName: string, us
       timezone: getSettingValue('timezone') ?? undefined,
     }).timezone;
     const tzOptions = { timeZone: timezone };
+    // Reuses the same customer-number visibility rule as bills/delivery slips
+    // (docs/reference/product-invariants.md) rather than a KOT-specific setting.
+    const showCustomerPhone = shouldShowCustomerNumber({
+      showOnReceipts: getSettingValue('bill_show_customer_phone') !== 'false',
+      alwaysForDeliveryOrders: getSettingValue('bill_delivery_show_customer_phone_always') !== 'false',
+      orderType: String(order?.type ?? ''),
+    });
 
     const warnings: PrintWarning[] = [];
     const nativeCapabilities = nativeFallbackCapabilities(capabilities);
@@ -948,6 +956,7 @@ export async function printKOT(order: any, items: any[], stationName: string, us
         arabicShaping: capabilities.shaping.arabic,
         cutMode: profile.cutMode,
         capabilities,
+        showCustomerPhone,
       });
       const nativeResult = renderKotViaDocument(order, items, stationName, {
         columns: cols,
@@ -958,6 +967,7 @@ export async function printKOT(order: any, items: any[], stationName: string, us
         arabicShaping: nativeCapabilities.shaping.arabic,
         cutMode: profile.cutMode,
         capabilities: nativeCapabilities,
+        showCustomerPhone,
       });
       const rasterized = await rasterizeDocumentLines(documentResult.lines, documentResult.warnings, {
         useUnicode,
@@ -974,7 +984,7 @@ export async function printKOT(order: any, items: any[], stationName: string, us
       if (rasterized.rasterFailed) warnings.push(...nativeResult.warnings);
       warnings.push(...rasterized.warnings);
     } else {
-      data = formatKOT(order, items, stationName, cols, useUnicode, profile.cutMode, locale, tzOptions, warnings, capabilities.shaping.arabic, normalizePrintLanguage(language ?? biz?.language), capabilities);
+      data = formatKOT(order, items, stationName, cols, useUnicode, profile.cutMode, locale, tzOptions, warnings, capabilities.shaping.arabic, normalizePrintLanguage(language ?? biz?.language), capabilities, showCustomerPhone);
     }
     if (hasFinancialPrintWarning(warnings)) {
       return {
@@ -2114,7 +2124,7 @@ function capitalize(text: string): string {
 
 
 /** Kitchen order ticket: builds KotDocument and renders via document-kot pipeline. */
-export function formatKOT(order: any, items: any[], stationName: string, cols: number = 48, useUnicode: boolean = false, cutMode: PrinterCutMode = 'full', locale: string = 'en-US', tzOptions?: any, warnings?: PrintWarning[], arabicShaping: boolean = false, language?: string, capabilities?: ThermalPrinterCapabilities): Buffer {
+export function formatKOT(order: any, items: any[], stationName: string, cols: number = 48, useUnicode: boolean = false, cutMode: PrinterCutMode = 'full', locale: string = 'en-US', tzOptions?: any, warnings?: PrintWarning[], arabicShaping: boolean = false, language?: string, capabilities?: ThermalPrinterCapabilities, showCustomerPhone?: boolean): Buffer {
   const lang = normalizePrintLanguage(language);
   const result = renderKotViaDocument(order, items, stationName, {
     columns: cols,
@@ -2125,6 +2135,7 @@ export function formatKOT(order: any, items: any[], stationName: string, cols: n
     arabicShaping,
     cutMode,
     capabilities,
+    showCustomerPhone,
   });
   if (warnings && result.warnings.length > 0) warnings.push(...result.warnings);
   return result.data;
