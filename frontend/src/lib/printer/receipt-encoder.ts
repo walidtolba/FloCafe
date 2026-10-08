@@ -484,11 +484,18 @@ export function buildClassicReceiptBytes(
 
   if (meta) {
     enc.size('small');
-    safePrinterText(enc, `${labelOf(meta.invoiceNumberLabel)} `, warnings, false, arabicShaping);
+    const invoiceLabelPrefix = `${labelOf(meta.invoiceNumberLabel)} `;
+    const invoiceRow = padRow(
+      `${invoiceLabelPrefix}${meta.invoiceNumber.text}`,
+      formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone),
+      cols,
+    );
+    const invoiceRowSuffix = invoiceRow.slice(normalizeThermalText(`${invoiceLabelPrefix}${meta.invoiceNumber.text}`, opts.capabilities).length);
+    safePrinterText(enc, invoiceLabelPrefix, warnings, false, arabicShaping);
     enc.bold(true);
     safePrinterText(enc, meta.invoiceNumber.text, warnings, false, arabicShaping);
-    enc.bold(false).newline();
-    safePrinterText(enc, formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone), warnings, false, arabicShaping);
+    enc.bold(false);
+    safePrinterText(enc, invoiceRowSuffix, warnings, false, arabicShaping);
     enc
       .newline()
       .size('normal')
@@ -699,13 +706,20 @@ export function buildCompactReceiptBytes(
   }
   enc.align('left').rule({ style: 'single' });
 
-  // Invoice number (bold, bare sequence), then timestamp on its own line below.
+  // Invoice number and timestamp on one line (document-meta block), number bold.
   if (meta) {
-    safePrinterText(enc, `${labelOf(meta.invoiceNumberLabel)} `, warnings, false, arabicShaping);
+    const invoiceLabelPrefix = `${labelOf(meta.invoiceNumberLabel)} `;
+    const invoiceRow = padRow(
+      `${invoiceLabelPrefix}${meta.invoiceNumber.text}`,
+      formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone),
+      cols,
+    );
+    const invoiceRowSuffix = invoiceRow.slice(normalizeThermalText(`${invoiceLabelPrefix}${meta.invoiceNumber.text}`, opts.capabilities).length);
+    safePrinterText(enc, invoiceLabelPrefix, warnings, false, arabicShaping);
     enc.bold(true);
     safePrinterText(enc, meta.invoiceNumber.text, warnings, false, arabicShaping);
-    enc.bold(false).newline();
-    safePrinterText(enc, formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone), warnings, false, arabicShaping).newline();
+    enc.bold(false);
+    safePrinterText(enc, invoiceRowSuffix, warnings, false, arabicShaping).newline();
 
     if (meta.table) {
       safePrinterText(enc, meta.table.label.primary.replace('{name}', meta.table.name.text), warnings, false, arabicShaping, undefined, cols).newline();

@@ -349,8 +349,10 @@ export function generateBillHtml(
     <!-- Bill Details -->
     <div class="bill-details">
       <table>
-        <tr><td><strong>${escapeHtml(invoiceNumberLabel)}</strong> <strong>${meta ? directionalValue(meta.invoiceNumber, base) : ''}</strong></td><td></td></tr>
-        <tr><td><strong>${escapeHtml(L.date)}</strong> ${meta ? escapeHtml(formatReceiptDate(meta.timestamp.text, tenant, LANGUAGES[lang]?.locale ?? lang)) : ''}</td><td></td></tr>
+        <tr>
+          <td><strong>${escapeHtml(invoiceNumberLabel)}</strong> <strong>${meta ? directionalValue(meta.invoiceNumber, base) : ''}</strong></td>
+          <td class="text-end"><strong>${escapeHtml(L.date)}</strong> ${meta ? escapeHtml(formatReceiptDate(meta.timestamp.text, tenant, LANGUAGES[lang]?.locale ?? lang)) : ''}</td>
+        </tr>
         ${meta?.table ? `<tr><td><strong>${escapeHtml(L.table)}</strong> ${escapeHtml(meta.table.name.text)}</td><td></td></tr>` : ''}
         ${customer?.heading ? `<tr><td colspan="2"><strong>${escapeHtml(customer.heading.primary)}</strong></td></tr>` : ''}
         ${customer?.name ? `<tr><td><strong>${escapeHtml(L.customer)}</strong> ${escapeHtml(customer.name.text)}</td><td></td></tr>` : ''}
