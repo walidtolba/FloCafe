@@ -156,9 +156,13 @@ function maskPhoneOnReceipt(phone: string): string {
   return 'x'.repeat(phone.length - 4) + phone.slice(-4);
 }
 
-/** Masked unless a caller opts out, so existing receipt bytes do not move. */
+/**
+ * Full by default — the KOT and delivery slip already carry the full number
+ * for anyone who needs to call the customer, so the receipt no longer masks
+ * it either. Masked only when a caller explicitly opts in.
+ */
 function resolveReceiptPhone(phone: string, maskCustomerPhone?: boolean): string {
-  return maskCustomerPhone === false ? phone : maskPhoneOnReceipt(phone);
+  return maskCustomerPhone === true ? maskPhoneOnReceipt(phone) : phone;
 }
 
 // Document render environment (shared by classic + compact)
@@ -480,17 +484,11 @@ export function buildClassicReceiptBytes(
 
   if (meta) {
     enc.size('small');
-    safePrinterText(
-      enc,
-      padRow(
-        `${labelOf(meta.invoiceNumberLabel)} ${meta.invoiceNumber.text}`,
-        formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone),
-        cols,
-      ),
-      warnings,
-      false,
-      arabicShaping,
-    );
+    safePrinterText(enc, `${labelOf(meta.invoiceNumberLabel)} `, warnings, false, arabicShaping);
+    enc.bold(true);
+    safePrinterText(enc, meta.invoiceNumber.text, warnings, false, arabicShaping);
+    enc.bold(false).newline();
+    safePrinterText(enc, formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone), warnings, false, arabicShaping);
     enc
       .newline()
       .size('normal')
@@ -701,19 +699,13 @@ export function buildCompactReceiptBytes(
   }
   enc.align('left').rule({ style: 'single' });
 
-  // Invoice number and timestamp on one line (document-meta block)
+  // Invoice number (bold, bare sequence), then timestamp on its own line below.
   if (meta) {
-    safePrinterText(
-      enc,
-      padRow(
-        `${labelOf(meta.invoiceNumberLabel)} ${meta.invoiceNumber.text}`,
-        formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone),
-        cols,
-      ),
-      warnings,
-      false,
-      arabicShaping,
-    ).newline();
+    safePrinterText(enc, `${labelOf(meta.invoiceNumberLabel)} `, warnings, false, arabicShaping);
+    enc.bold(true);
+    safePrinterText(enc, meta.invoiceNumber.text, warnings, false, arabicShaping);
+    enc.bold(false).newline();
+    safePrinterText(enc, formatThermalTimestamp(meta.timestamp.text, locale, tenant.timezone), warnings, false, arabicShaping).newline();
 
     if (meta.table) {
       safePrinterText(enc, meta.table.label.primary.replace('{name}', meta.table.name.text), warnings, false, arabicShaping, undefined, cols).newline();

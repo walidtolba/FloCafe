@@ -111,7 +111,7 @@ console.log('\n▶ Block construction (fixture bill)');
   ok('business header block carries identity + tax id');
 
   const meta = blockOf(document, 'document-meta');
-  assert.equal(meta.invoiceNumber.text, 'INV-PARITY-001');
+  assert.equal(meta.invoiceNumber.text, '001', 'only the bare trailing sequence prints, not the full prefix-period-sequence string');
   assert.equal(meta.invoiceNumberLabel.conceptId, 'print.invoiceNumber');
   assert.equal(meta.timestamp.text, '2026-08-21 18:42:00');
   assert.equal(meta.table?.name.text, '4');
@@ -510,9 +510,9 @@ console.log('\n▶ Cash tendered and change projection');
 
   assert.deepEqual(
     paymentDisplayRows(payments.lines[0]).map((row) => [row.label.primary, row.amount]),
-    [['Cash', 150], ['Cash Received', 200], ['Change Returned', 50]],
+    [['Cash', 150]],
   );
-  ok('payment rows print applied amount first, then cash received, then change');
+  ok('payment rows print only the applied amount — cash-received/change-returned rows are dropped by request');
 
   const bilingualPayments = blockOf(
     buildBillDocument(printData, makeContext({ languages: ['fa', 'en'], baseDirection: 'rtl' })),
@@ -546,10 +546,10 @@ console.log('\n▶ Cash tendered and change projection');
     ['compact', renderBillDocumentToCompactLines(overpaidDocument, renderOptions)],
   ] as const) {
     assert(lines.some((line) => line.includes('Cash') && line.includes('₹150.00')), `${renderer} keeps the applied cash row`);
-    assert(lines.some((line) => line.includes('Cash Received') && line.includes('₹200.00')), `${renderer} renders the cash received row`);
-    assert(lines.some((line) => line.includes('Change Returned') && line.includes('₹50.00')), `${renderer} renders the change row`);
+    assert(!lines.some((line) => line.includes('Cash Received')), `${renderer} no longer renders the cash received row`);
+    assert(!lines.some((line) => line.includes('Change Returned')), `${renderer} no longer renders the change row`);
   }
-  ok('classic and compact render the tendered/change rows');
+  ok('classic and compact drop the tendered/change rows, keeping only the applied amount');
 
   const zeroDecimalContext = makeContext({ locale: 'ja-JP', currency: 'JPY', currencySymbol: '¥' });
   const zeroDecimalDocument = buildBillDocument(
@@ -566,12 +566,11 @@ console.log('\n▶ Cash tendered and change projection');
     ['classic', renderBillDocumentToClassicLines(zeroDecimalDocument, zeroDecimalOptions)],
     ['compact', renderBillDocumentToCompactLines(zeroDecimalDocument, zeroDecimalOptions)],
   ] as const) {
-    for (const amount of ['¥150', '¥200', '¥50']) {
-      assert(lines.some((line) => line.includes(amount)), `${renderer} preserves the JPY zero-decimal amount ${amount}`);
-    }
-    assert(!lines.some((line) => /¥(?:150|200|50)\.00/.test(line)), `${renderer} does not add decimal digits to JPY cash rows`);
+    assert(lines.some((line) => line.includes('¥150')), `${renderer} preserves the JPY zero-decimal amount ¥150`);
+    assert(!lines.some((line) => line.includes('Cash Received') || line.includes('Change Returned')), `${renderer} no longer renders the dropped tendered/change rows`);
+    assert(!lines.some((line) => /¥150\.00/.test(line)), `${renderer} does not add decimal digits to the JPY cash row`);
   }
-  ok('cash rows follow zero-decimal currency formatting');
+  ok('the remaining cash row follows zero-decimal currency formatting');
 
   const exact = buildBillDocument(
     makePrintData({ bill: { payments: [{ method: 'cash', amount: 150, tendered: 150, change: 0 }] } }),
@@ -592,12 +591,16 @@ console.log('\n▶ Cash tendered and change projection');
     makePrintData({ bill: { payments: [{ method: 'cash', amount: 150, change: 50 }] } }),
     makeContext(),
   );
+  // The underlying tendered-amount fallback (missing tendered data falls back
+  // to applied cash) still happens on the PaymentsBlock itself — it just
+  // isn't rendered as a row anymore, same as every other tendered/change row.
+  assert.equal(blockOf(fallback, 'payments').lines[0].tendered?.amount, 150);
+  assert.equal(blockOf(fallback, 'payments').lines[0].change?.amount, 50);
   assert.deepEqual(
     paymentDisplayRows(blockOf(fallback, 'payments').lines[0]).map((row) => row.amount),
-    [150, 150, 50],
-    'a positive change without tendered data falls back to applied cash',
+    [150],
   );
-  ok('missing tendered data falls back to applied cash');
+  ok('missing tendered data still falls back to applied cash on the block; the row set stays just the applied amount');
 
   assert.equal(projectCashTender({ method: 'cash', amount: 150, tendered: 200, change: 50 })?.tendered, 200);
   assert.equal(projectCashTender({ method: 'cash', amount: 150, tendered: 200, change: 0 })?.change, 0, 'over-tender with no persisted change still projects the tendered row');

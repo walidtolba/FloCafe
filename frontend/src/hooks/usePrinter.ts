@@ -309,7 +309,6 @@ export const usePrinterStore = create<PrinterState>()(
                   businessName: tenant.business_name,
                   includeTaxId: billShowTaxId,
                   taxIdLabel: getCountryByCode(tenant.country)?.taxIdLabel ?? 'Tax ID',
-                  maskCustomerPhone: true,
                   useBillCustomer: true,
                 }),
                 template: rasterBillTemplate,

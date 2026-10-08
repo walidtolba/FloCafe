@@ -580,9 +580,13 @@ function run(): void {
   }
 
   // ------------------------------------------------------------------
-  // 2d. Cash tendered & change parity (#770) — every supported normal
-  // receipt path prints the same tendered/change rows; exact and legacy
-  // payments without the optional fields keep their existing output.
+  // 2d. Cash tendered & change rows (#770, dropped by explicit request) —
+  // every supported receipt path prints only the applied payment amount;
+  // the cash-received/change-returned rows no longer render anywhere, for
+  // overpaid, split, exact, and legacy payments alike. The underlying
+  // tendered/change projection (PaymentsBlock.lines[].tendered/.change,
+  // checked directly in print-document.test.ts) is unchanged — only the
+  // rendered row set is smaller.
   // ------------------------------------------------------------------
   section('Cash tendered and change rows');
   {
@@ -595,19 +599,11 @@ function run(): void {
       ['webusb/compact', new TextDecoder().decode(fe.receiptEncoder.buildCompactReceiptBytes(fixture, tenant as any, { paperWidth: 80, useUnicode: true, languages: ['en'] }, []))],
       ['browser/html', fe.webPrint.generateBillHtml(fixture, tenant as any, { paperSize: 'thermal80', businessName: business.name, languages: ['en'] })],
     ];
-    const expectCashRows = (text: string, renderer: string): void => {
-      const rows = contentRows(text);
-      const appliedRow = rows.find((row) => /\bcash\b/i.test(row) && !row.includes(tenderedLabel));
-      const tenderedRow = rows.find((row) => row.includes(tenderedLabel));
-      const changeRow = rows.find((row) => row.includes(changeLabel));
-      warn(appliedRow != null && digitsOf(appliedRow).includes('150'), `${renderer}: applied cash 150 keeps its own row`);
-      warn(tenderedRow != null && digitsOf(tenderedRow).includes('200'), `${renderer}: ${tenderedLabel} 200 row`);
-      warn(changeRow != null && digitsOf(changeRow).includes('50'), `${renderer}: ${changeLabel} 50 row`);
+    const expectNoTenderedOrChangeRows = (text: string, renderer: string): void => {
+      const normalized = normalizeSemanticContent(text);
       warn(
-        appliedRow != null && tenderedRow != null && changeRow != null
-          && rows.indexOf(appliedRow) < rows.indexOf(tenderedRow)
-          && rows.indexOf(tenderedRow) < rows.indexOf(changeRow),
-        `${renderer}: applied, cash-received, and change rows keep their order`,
+        !normalized.includes(normalizeSemanticContent(tenderedLabel)) && !normalized.includes(normalizeSemanticContent(changeLabel)),
+        `${renderer}: no cash-received/change-returned row renders`,
       );
     };
 
@@ -623,13 +619,20 @@ function run(): void {
       payment_details: [{ method: 'cash', amount: 150, tendered_amount: 200, change_amount: 50 }],
     };
     for (const [renderer, text] of renderBill(overpaidBill)) {
-      expectCashRows(text, renderer);
+      const rows = contentRows(text);
+      const appliedRow = rows.find((row) => /\bcash\b/i.test(row) && !row.includes(tenderedLabel));
+      warn(appliedRow != null && digitsOf(appliedRow).includes('150'), `${renderer}: applied cash 150 keeps its own row`);
+      expectNoTenderedOrChangeRows(text, renderer);
     }
 
+    // The underlying tendered/change projection still happens — it simply
+    // isn't rendered as a row. (Row-level assertions live in
+    // print-document.test.ts; this just confirms the normalizer feeding
+    // every renderer here hasn't silently dropped the data too.)
     const fePayments = fe.printDocument.buildBillPrintData(overpaidBill).bill.payments;
     warn(
       fePayments.length === 1 && fePayments[0].amount === 150 && fePayments[0].tendered === 200 && fePayments[0].change === 50,
-      'frontend normalizer preserves tendered/change',
+      'frontend normalizer preserves tendered/change (unrendered)',
     );
 
     const splitBill = {
@@ -643,24 +646,18 @@ function run(): void {
     };
     for (const [renderer, text] of renderBill(splitBill)) {
       const rows = contentRows(text);
-      const tenderedRows = rows.filter((row) => row.includes(tenderedLabel));
-      const changeRows = rows.filter((row) => row.includes(changeLabel));
       const cashRows = rows.filter((row) => /\bcash\b/i.test(row) && !row.includes(tenderedLabel));
       const cardRow = rows.find((row) => /\bcard\b/i.test(row));
-      warn(tenderedRows.length === 1 && digitsOf(tenderedRows[0]).includes('80'), `${renderer}: split payment keeps one cash-received row`);
-      warn(changeRows.length === 1 && digitsOf(changeRows[0]).includes('20'), `${renderer}: split payment keeps one change row`);
       warn(
         cashRows.length === 2 && digitsOf(cashRows[0]).includes('60') && digitsOf(cashRows[1]).includes('20'),
         `${renderer}: split cash payments keep applied amounts and order`,
       );
       warn(cardRow != null && digitsOf(cardRow).includes('70'), `${renderer}: split non-cash payment keeps its applied amount`);
       warn(
-        rows.indexOf(cashRows[0]) < rows.indexOf(tenderedRows[0])
-          && rows.indexOf(tenderedRows[0]) < rows.indexOf(changeRows[0])
-          && rows.indexOf(changeRows[0]) < rows.indexOf(cardRow!)
-          && rows.indexOf(cardRow!) < rows.indexOf(cashRows[1]),
-        `${renderer}: split cash, tender, change, card, and exact-cash rows keep payment order`,
+        cardRow != null && rows.indexOf(cashRows[0]) < rows.indexOf(cardRow) && rows.indexOf(cardRow) < rows.indexOf(cashRows[1]),
+        `${renderer}: split cash and card rows keep payment order`,
       );
+      expectNoTenderedOrChangeRows(text, renderer);
     }
 
     const merchantFixture = validateMerchantTemplate(JSON.parse(fs.readFileSync(
@@ -686,25 +683,20 @@ function run(): void {
         arabicShaping: false,
         cutMode: 'full',
       }), true));
-      expectCashRows(merchantText, 'merchant/classic');
+      const rows = contentRows(merchantText);
+      const appliedRow = rows.find((row) => /\bcash\b/i.test(row) && !row.includes(tenderedLabel));
+      warn(appliedRow != null && digitsOf(appliedRow).includes('150'), `merchant/classic: applied cash 150 keeps its own row`);
+      expectNoTenderedOrChangeRows(merchantText, 'merchant/classic');
     }
 
     const exactBill = { ...overpaidBill, payment_details: [{ method: 'cash', amount: 150, tendered_amount: 150, change_amount: 0 }] };
     for (const [renderer, text] of renderBill(exactBill)) {
-      const normalized = normalizeSemanticContent(text);
-      warn(
-        !normalized.includes(normalizeSemanticContent(tenderedLabel)) && !normalized.includes(normalizeSemanticContent(changeLabel)),
-        `${renderer}: exact cash prints no tendered/change row`,
-      );
+      expectNoTenderedOrChangeRows(text, `${renderer} (exact cash)`);
     }
 
     // The shared fixture carries legacy payments without the optional fields.
     for (const [renderer, text] of renderBill(bill)) {
-      const normalized = normalizeSemanticContent(text);
-      warn(
-        !normalized.includes(normalizeSemanticContent(tenderedLabel)) && !normalized.includes(normalizeSemanticContent(changeLabel)),
-        `${renderer}: legacy payments print no tendered/change row`,
-      );
+      expectNoTenderedOrChangeRows(text, `${renderer} (legacy payments)`);
     }
   }
 

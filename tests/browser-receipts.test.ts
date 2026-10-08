@@ -258,7 +258,7 @@ async function run() {
       includeTaxId: true,
     });
 
-    assert('Bill number is wrapped in LTR island span', html.includes('<span class="ltr" dir="ltr">BILL-IR-0089</span>'));
+    assert('Bill number is wrapped in LTR island span', html.includes('<span class="ltr" dir="ltr">0089</span>'));
     assert('Store phone is wrapped in LTR island span', html.includes('<span class="ltr" dir="ltr">+98 21 6644 1234</span>'));
     assert('Customer phone is wrapped in LTR island span', html.includes('<span class="ltr" dir="ltr">+98 912 345 6789</span>'));
     assert('Economic Code / Tax ID is wrapped in LTR island span', html.includes('<span class="ltr" dir="ltr">411123456789</span>'));

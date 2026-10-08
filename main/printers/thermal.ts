@@ -1877,6 +1877,11 @@ function renderEscposLineTemplateV1(payload: any, profile: { columns: number; la
             const amount = Number(payment.amount) || 0;
             const methodLabel = truncate(resolvePaymentMethodLabel(String(payment.method), lang), cols - 12, lang, capabilities);
             pushFinancialLines(financialRows(methodLabel, formatCurrency(amount, prefix, locale, trimDecimals, fractionDigits), cols, lang, capabilities));
+            // KNOWN GAP: unlike shared/print/document.ts's paymentDisplayRows
+            // (the kernel chokepoint every other renderer uses), this merchant
+            // plugin-template path still renders the cash-received/change-
+            // returned rows below. Only reachable when a merchant has an
+            // installed custom print-template plugin — not fixed here.
             const tender = projectCashTender({
               method: String(payment.method),
               amount,

@@ -1,5 +1,9 @@
-// Delivery slip against receipt: the slip prints the full contact block, the
-// receipt keeps its mask, and neither can reach the full number by a shared default.
+// Delivery slip against receipt: the slip prints the full contact block, and
+// the receipt now prints it in full too (a conscious reversal of the original
+// #895 masked-by-default policy — the KOT and the slip already carry the full
+// number for anyone who needs to call the customer, so masking only the
+// receipt served no purpose). The receipt encoder keeps a `maskCustomerPhone`
+// opt-in for any future workflow that still wants it.
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -228,7 +232,12 @@ test('delivery exception: a delivery receipt shows the number with receipts turn
   );
 });
 
-test('delivery exception: a receipt still masks the number in both override states', () => {
+test('delivery exception: a receipt shows the full number in both override states', () => {
+  // Masking was reversed (superseding #895): the KOT and the delivery slip
+  // already carry the full number for anyone who needs to call the customer,
+  // so the receipt no longer masks it either. Visibility (whether the number
+  // appears at all) and masking are still independent decisions — this test
+  // now checks visibility only, since masking defaults to off everywhere.
   const bill: any = { ...RECEIPT_BILL, order: { ...RECEIPT_ORDER, type: 'delivery', customer: { name: 'Asha Kumar', phone: FULL_PHONE } } };
   const tenant: any = { business_name: 'Cafe', currency: 'INR', country: 'IN', timezone: 'Asia/Kolkata' };
   for (const alwaysForDeliveryOrders of [true, false]) {
@@ -240,14 +249,11 @@ test('delivery exception: a receipt still masks the number in both override stat
     const text = escPosToText(Buffer.from(bytes));
     const shouldShow = shouldShowCustomerNumber({ showOnReceipts: false, alwaysForDeliveryOrders, orderType: 'delivery' });
     if (shouldShow) {
-      // Visible, and masked: decision 2 keeps the last-four mask on receipts.
-      // Visibility and the mask are independent, which is the point of this
-      assert.ok(text.includes(MASKED_PHONE), `override=${alwaysForDeliveryOrders}: the delivery receipt shows the masked number`);
-      assert.ok(!text.includes(FULL_PHONE), `override=${alwaysForDeliveryOrders}: the receipt never prints the full number`);
+      assert.ok(text.includes(FULL_PHONE), `override=${alwaysForDeliveryOrders}: the delivery receipt shows the full number`);
     } else {
-      assert.ok(!text.includes(MASKED_PHONE), `override=${alwaysForDeliveryOrders}: the delivery receipt withholds the number entirely`);
-      assert.ok(!text.includes(FULL_PHONE), `override=${alwaysForDeliveryOrders}: and never the full one`);
+      assert.ok(!text.includes(FULL_PHONE), `override=${alwaysForDeliveryOrders}: the delivery receipt withholds the number entirely`);
     }
+    assert.ok(!text.includes(MASKED_PHONE), `override=${alwaysForDeliveryOrders}: the receipt never masks the number`);
   }
   for (const alwaysForDeliveryOrders of [true, false]) {
     const text = escPosToText(Buffer.from(fe.receiptEncoder.buildClassicReceiptBytes(
@@ -256,39 +262,39 @@ test('delivery exception: a receipt still masks the number in both override stat
       { paperWidth: 80, showCustomerPhone: true, deliveryShowCustomerPhoneAlways: alwaysForDeliveryOrders },
       [],
     )));
-    assert.ok(text.includes(MASKED_PHONE), `override=${alwaysForDeliveryOrders}: receipts still mask the number`);
-    assert.ok(!text.includes(FULL_PHONE), `override=${alwaysForDeliveryOrders}: and never the full one`);
+    assert.ok(text.includes(FULL_PHONE), `override=${alwaysForDeliveryOrders}: receipts show the full number`);
+    assert.ok(!text.includes(MASKED_PHONE), `override=${alwaysForDeliveryOrders}: and never a masked one`);
   }
 });
 
 // ---------------------------------------------------------------------------
-// 2. The receipt still masks the customer number.
+// 2. The receipt prints the full customer number (masking reversed, #895 superseded).
 // ---------------------------------------------------------------------------
 
-test('receipt: still prints the masked customer number, unchanged', () => {
-  // Guards existing behaviour. This is the assertion that makes the slip's full
-  // number safe to ship: nothing about this change may move the receipt.
+test('receipt: still prints the full customer number, unchanged', () => {
+  // Guards existing behaviour on the backend-native path, which never masked.
   const data = formatReceipt(RECEIPT_ORDER, RECEIPT_BILL, RECEIPT_BUSINESS, 'classic', 42, false, false, undefined, []);
   const text = escPosToText(data);
   assert.ok(text.includes(FULL_PHONE), 'the backend-native receipt path already printed the full number; it still does');
 });
 
-test('receipt encoder: masking is a named option that defaults to masked', () => {
+test('receipt encoder: masking is a named option that defaults to full', () => {
   // Behavioural, not a source scan: the frontend WebUSB receipt encoder is the
-  // path that has always masked, so it is the one that must keep doing so.
+  // path that used to mask by default — it no longer does, matching every
+  // other render surface (KOT, delivery slip, backend-native receipt).
   const bill: any = { ...RECEIPT_BILL, order: { ...RECEIPT_ORDER, customer: { name: 'Asha Kumar', phone: FULL_PHONE } } };
   const tenant: any = { business_name: 'Flo Parity Cafe', currency: 'INR', country: 'IN', timezone: 'Asia/Kolkata' };
 
   const defaulted = escPosToText(Buffer.from(fe.receiptEncoder.buildClassicReceiptBytes(bill, tenant, { paperWidth: 80 }, [])));
-  assert.ok(defaulted.includes(MASKED_PHONE), 'the receipt encoder still masks by default');
-  assert.ok(!defaulted.includes(FULL_PHONE), 'the receipt encoder must not print the full number by default');
+  assert.ok(defaulted.includes(FULL_PHONE), 'the receipt encoder shows the full number by default');
+  assert.ok(!defaulted.includes(MASKED_PHONE), 'the receipt encoder must not mask by default');
 
   const compact = escPosToText(Buffer.from(fe.receiptEncoder.buildCompactReceiptBytes(bill, tenant, { paperWidth: 80 }, [])));
-  assert.ok(compact.includes(MASKED_PHONE), 'the compact receipt encoder still masks by default');
-  assert.ok(!compact.includes(FULL_PHONE), 'the compact receipt encoder must not print the full number by default');
+  assert.ok(compact.includes(FULL_PHONE), 'the compact receipt encoder shows the full number by default');
+  assert.ok(!compact.includes(MASKED_PHONE), 'the compact receipt encoder must not mask by default');
 
-  const optedOut = escPosToText(Buffer.from(fe.receiptEncoder.buildClassicReceiptBytes(bill, tenant, { paperWidth: 80, maskCustomerPhone: false }, [])));
-  assert.ok(optedOut.includes(FULL_PHONE), 'an explicit opt-out is the only way to the full number, and it works');
+  const optedIn = escPosToText(Buffer.from(fe.receiptEncoder.buildClassicReceiptBytes(bill, tenant, { paperWidth: 80, maskCustomerPhone: true }, [])));
+  assert.ok(optedIn.includes(MASKED_PHONE), 'an explicit opt-in is the only way to mask, and it still works');
 });
 
 test('receipt encoder: every mask application goes through the named option', () => {
@@ -307,8 +313,8 @@ test('receipt encoder: every mask application goes through the named option', ()
   assert.deepEqual(directApplications, [], 'mask application must go through resolveReceiptPhone');
   assert.match(
     receiptEncoderSource,
-    /maskCustomerPhone === false \? phone : maskPhoneOnReceipt\(phone\)/,
-    'the receipt mask must stay a named option that defaults to masked',
+    /maskCustomerPhone === true \? maskPhoneOnReceipt\(phone\) : phone/,
+    'the receipt mask must stay a named option that defaults to full',
   );
 });
 

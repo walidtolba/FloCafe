@@ -5,7 +5,7 @@ import { normalizeCurrencyToAscii, normalizeThermalText, padCurrencyPrefix } fro
 import { columnsForReceiptPaperSize, displayCellWidth, graphemeSegments, truncateToDisplayCells, truncateToDisplayCellsFromEnd } from '@print/width';
 import { getCountryByCode, getCurrencyFractionDigits, getCurrencySymbol, resolveTenantCurrency } from '@/lib/countries';
 import { formatDate } from './format-date';
-import { shouldShowCustomerNumber } from '@print/document';
+import { extractBareBillNumber, shouldShowCustomerNumber } from '@print/document';
 import { formatTaxComponentLabel, resolveTaxComponents } from './tax-components';
 import { hasUnsupportedPrinterChars, isArabicShapingSafeLine, safePrinterText as writeSafePrinterText, wrapPrinterText, type PrintWarning } from './warnings';
 import { printLabelResolver } from './print-document';
@@ -34,6 +34,9 @@ export interface TaxBillOptions {
   /** Show the customer phone when available. Default: true */
   showCustomerPhone?: boolean;
   deliveryShowCustomerPhoneAlways?: boolean;
+  /** Mask to the last 4 digits. Default false — the KOT and delivery slip
+   *  already carry the full number for anyone who needs to call the customer. */
+  maskCustomerPhone?: boolean;
   /** Show the table number when available. Default: true */
   showTableNumber?: boolean;
   /** State code for tax calculation */
@@ -138,6 +141,7 @@ export function buildTaxBillBytes(
     showCustomerName = true,
     showCustomerPhone = true,
     deliveryShowCustomerPhoneAlways,
+    maskCustomerPhone = false,
     showTableNumber = true,
     useUnicode = false,
     trimDecimals = false,
@@ -207,7 +211,10 @@ export function buildTaxBillBytes(
 
   // ── Bill Details ─────────────────────────────────────────────────────────
   enc.align('left');
-  safePrinterText(enc, `${labelFor('receipt.billNumber')}: ${bill.bill_number}`, warnings, false, arabicShaping, undefined, cols, language).newline();
+  safePrinterText(enc, `${labelFor('receipt.billNumber')}: `, warnings, false, arabicShaping, undefined, cols, language);
+  enc.bold(true);
+  safePrinterText(enc, extractBareBillNumber(bill.bill_number), warnings, false, arabicShaping, undefined, cols, language);
+  enc.bold(false).newline();
   const billDate = rawEscPos
     ? formatRawTaxBillDate(bill.order?.created_at, locale, tenant.timezone, opts.capabilities)
     : formatDate(bill.order?.created_at, locale, tenant.timezone ? { timeZone: tenant.timezone } : undefined);
@@ -236,7 +243,8 @@ export function buildTaxBillBytes(
   // customer's phone: it is the number entered for this specific delivery.
   const customerPhoneForBill = order?.delivery_phone || order?.customer?.phone;
   if (phoneVisible && customerPhoneForBill) {
-    safePrinterText(enc, `${labelFor('print.numberShort')}: ${maskPhoneOnReceipt(customerPhoneForBill)}`, warnings, false, arabicShaping, undefined, cols, language).newline();
+    const displayedPhone = maskCustomerPhone ? maskPhoneOnReceipt(customerPhoneForBill) : customerPhoneForBill;
+    safePrinterText(enc, `${labelFor('print.numberShort')}: ${displayedPhone}`, warnings, false, arabicShaping, undefined, cols, language).newline();
   }
   if (deliveryAddress.length > 0) {
     // Wrapped, not truncated: a shaped printer writes raw bytes and would

@@ -318,8 +318,8 @@ async function run(): Promise<void> {
     }, paymentLines, caps, `${renderer}-payment-source`, [paymentGroup]);
     const paymentRequestText = JSON.stringify(paymentRequests.map((request) => request.text));
     assert.equal(paymentRequests.some((request) => request.text === 'مدفوع $12.34'), true, paymentRequestText);
-    assert.equal(paymentRequests.some((request) => request.text === 'دریافتی $20.00'), true, paymentRequestText);
-    assert.equal(paymentRequests.some((request) => request.text === 'بازگشتی $7.66'), true, paymentRequestText);
+    assert.equal(paymentRequests.some((request) => request.text === 'دریافتی $20.00'), false, paymentRequestText);
+    assert.equal(paymentRequests.some((request) => request.text === 'بازگشتی $7.66'), false, paymentRequestText);
     assert.equal(paymentRequests.some((request) => request.text.includes(':')), false);
   }
   const financialDocument = {

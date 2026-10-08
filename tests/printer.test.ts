@@ -737,7 +737,7 @@ console.log('\n✅ Test 2: Compact receipt (80mm, 48 cols)');
   const text = buf.toString('utf8');
 
   assert('renders business name', text.includes('Flo Test Cafe'));
-  assert('renders bill number', text.includes('INV-20260421-0001'));
+  assert('renders bill number', text.includes('0001') && !text.includes('INV-20260421-0001'));
   assert('renders Cheeseburger row', text.includes('Cheeseburger'));
   assert('renders addon "Extra Cheese"', text.includes('Extra Cheese'));
   assert('renders addon "Bacon"', text.includes('Bacon'));

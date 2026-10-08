@@ -548,19 +548,34 @@ export function projectCashTender(payment: {
 }
 
 /**
- * Rows to print for one payment line: the applied amount first, then the
- * cash-received and change rows when the payment projects them. Every
- * renderer walks this list so the row order stays identical across surfaces.
+ * Rows to print for one payment line: just the applied amount. The
+ * cash-received/change-returned rows were dropped by explicit request — the
+ * receipt keeps only "Total" and the payment-method line. `line.tendered`/
+ * `line.change` stay populated on the PaymentsBlock (nothing recomputes or
+ * drops that data), they simply aren't rendered here anymore. Every renderer
+ * walks this list so the row set stays identical across every print surface.
  */
 export function paymentDisplayRows(line: PaymentsBlock['lines'][number]): readonly {
   readonly label: SemanticLabel;
   readonly amount: number;
 }[] {
-  return [
-    { label: line.label, amount: line.amount },
-    ...(line.tendered ? [line.tendered] : []),
-    ...(line.change ? [line.change] : []),
-  ];
+  return [{ label: line.label, amount: line.amount }];
+}
+
+/**
+ * A bill/order number is `<prefix>-<periodSegment>-<sequence>` (prefix is
+ * alnum-only, so it never contains a hyphen; the zero-padded sequence is
+ * always the last `-`-joined segment, even when the period segment itself
+ * contains one, e.g. a financial-year tag like "FY2025-26"). The printed
+ * ticket only needs the sequence, so this strips the rest. Returns the
+ * original value unchanged if it doesn't look like that shape, rather than
+ * guessing at a malformed or custom-prefixed number.
+ */
+export function extractBareBillNumber(value: string): string {
+  const segments = value.split('-');
+  if (segments.length < 2) return value;
+  const last = segments[segments.length - 1];
+  return last.length > 0 ? last : value;
 }
 
 /**
@@ -614,7 +629,7 @@ export function buildBillDocument(printData: PrintData, printContext: PrintConte
     billNumberLabel: resolveSemanticLabel(labels, 'receipt.billNumber'),
     dateLabel: resolveSemanticLabel(labels, 'receipt.date'),
     invoiceNumber: directionalText(
-      bill.billNumber.length > 0 ? bill.billNumber : order.orderNumber,
+      extractBareBillNumber(bill.billNumber.length > 0 ? bill.billNumber : order.orderNumber),
       base,
     ),
     timestamp: directionalText(order.createdAt, base),
