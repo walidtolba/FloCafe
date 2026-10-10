@@ -17,6 +17,7 @@ interface ConfirmState {
   message: string;
   title?: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   destructive?: boolean;
   resolve: (value: boolean) => void;
 }
@@ -33,6 +34,7 @@ export function useConfirm() {
       options?: {
         title?: string;
         confirmLabel?: string;
+        cancelLabel?: string;
         destructive?: boolean;
       },
     ): Promise<boolean> => {
@@ -44,6 +46,7 @@ export function useConfirm() {
             message,
             title: options?.title,
             confirmLabel: options?.confirmLabel,
+            cancelLabel: options?.cancelLabel,
             destructive: options?.destructive,
             resolve,
           };
@@ -72,7 +75,7 @@ export function useConfirm() {
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
-            {t('cancel')}
+            {state.cancelLabel || t('cancel')}
           </Button>
           <Button
             variant={state.destructive ? 'destructive' : 'default'}

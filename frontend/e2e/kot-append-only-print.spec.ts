@@ -132,6 +132,8 @@ test('adding an item to an occupied table only prints the newly appended item on
       response.url().includes('/api/printers/print-kot')
     );
     await page.getByRole('button', { name: /Add 1 item to order/i }).click();
+    await expect(page.getByRole('heading', { name: 'Print Ticket?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Print', exact: true }).click();
     await kotResponse;
 
     await expect(page.getByText(/Items added to order/)).toBeVisible();

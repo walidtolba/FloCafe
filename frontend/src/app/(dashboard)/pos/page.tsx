@@ -111,6 +111,7 @@ export default function POSPage() {
   const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled } = usePosSettingsStore();
   const { open: leftSidebarOpen } = useSidebar();
   const t = useTranslations('pos');
+  const tCommon = useTranslations('common');
   const tSupport = useTranslations('support');
   const currencyFmt = useFormatCurrency();
   const { confirm, ConfirmDialog } = useConfirm();
@@ -377,6 +378,13 @@ export default function POSPage() {
     // Master kot_printing_enabled check gates both manual and automatic prints.
     if (!kotPrintingEnabled) return;
     if (!autoPrintKot) return;
+
+    const shouldPrint = await confirm(t('printKotConfirm'), {
+      title: t('printKotConfirmTitle'),
+      confirmLabel: tCommon('print'),
+      cancelLabel: tCommon('done'),
+    });
+    if (!shouldPrint) return;
 
     try {
       const printWarnings = await printKot(order, order.items ? { items: order.items } : undefined);
