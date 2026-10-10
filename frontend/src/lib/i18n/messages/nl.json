@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "BELASTINGFACTUUR",
     "invoiceTitle": "FACTUUR",
-    "invoiceNumber": "Factuurnr.:",
+    "invoiceNumber": "Nr.:",
     "time": "Tijd",
     "customerShort": "Klant",
     "numberShort": "Klantnr.",

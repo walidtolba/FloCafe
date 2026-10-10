@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "税務請求書",
     "invoiceTitle": "請求書",
-    "invoiceNumber": "請求書番号：",
+    "invoiceNumber": "番号：",
     "time": "時刻",
     "customerShort": "顧客",
     "numberShort": "顧客番号",

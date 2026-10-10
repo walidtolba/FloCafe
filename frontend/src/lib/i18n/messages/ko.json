@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "세금 인보이스",
     "invoiceTitle": "인보이스",
-    "invoiceNumber": "인보이스 #:",
+    "invoiceNumber": "번호 #:",
     "time": "시간",
     "customerShort": "고객",
     "numberShort": "고객 번호",

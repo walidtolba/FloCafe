@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "TAX INVOICE",
     "invoiceTitle": "INVOICE",
-    "invoiceNumber": "Invoice #:",
+    "invoiceNumber": "Number:",
     "time": "Time",
     "customerShort": "Customer",
     "numberShort": "Customer No",

@@ -153,8 +153,13 @@ async function run() {
     paid_amount: 990000,
     balance: 0,
     payment_status: 'paid',
+    // Split across two card entries (not a single payment covering the
+    // whole total) so the applied-amount row still renders — a lone
+    // payment equal to the total is intentionally dropped as redundant
+    // with TOTAL.
     payment_details: [
-      { method: 'card', amount: 990000, timestamp: '2026-08-17T14:35:00.000Z' },
+      { method: 'card', amount: 500000, timestamp: '2026-08-17T14:35:00.000Z' },
+      { method: 'card', amount: 490000, timestamp: '2026-08-17T14:35:00.000Z' },
     ],
     tax_breakdown: [
       { title: 'ارزش افزوده (VAT)', rate: 10, amount: 90000 },
@@ -468,7 +473,10 @@ async function run() {
       tax_amount: 90000,
       total: 1000000,
       paid_amount: 1000000,
-      payment_details: [{ method: 'card', amount: 1000000, timestamp: '2026-08-17T14:35:00.000Z' }],
+      payment_details: [
+        { method: 'card', amount: 600000, timestamp: '2026-08-17T14:35:00.000Z' },
+        { method: 'card', amount: 400000, timestamp: '2026-08-17T14:35:00.000Z' },
+      ],
     };
     const canonicalTenant = { ...baseIranTenant, currency_display: 'rial' as const };
     const expectedLabels = {

@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "ใบกำกับภาษี",
     "invoiceTitle": "ใบแจ้งหนี้",
-    "invoiceNumber": "เลขที่ใบแจ้งหนี้#:",
+    "invoiceNumber": "เลขที่#:",
     "time": "เวลา",
     "customerShort": "ลูกค้า",
     "numberShort": "หมายเลขลูกค้า",

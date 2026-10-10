@@ -868,7 +868,7 @@ console.log('\n✅ Test 5: Tax-specific labels fall back to the default template
   const buf = formatReceipt(fixtureOrder, fixtureBill, fixtureBusiness, 'detailed', 48, true);
   const text = buf.toString('utf8');
 
-  assert('legacy detailed label renders the default classic receipt', text.includes('Invoice #:'));
+  assert('legacy detailed label renders the default classic receipt', text.includes('Number:'));
   assert('legacy detailed label does not render the GST-style tax invoice', !text.includes('TAX INVOICE'));
   assert('does not render a FloPOS branding footer (removed)', !text.includes('Powered by FloPOS') && !text.includes('(flopos.com)'));
 
@@ -882,9 +882,9 @@ console.log('\n✅ Test 5b: Template labels normalize to built-in backend templa
   const compact = formatReceipt(fixtureOrder, fixtureBill, fixtureBusiness, 'Compact', 48, true).toString('utf8');
   const detailed = formatReceipt(fixtureOrder, fixtureBill, fixtureBusiness, 'Detailed (Tax)', 48, true).toString('utf8');
 
-  assert('Classic label renders classic template', classic.includes('Invoice #:'));
+  assert('Classic label renders classic template', classic.includes('Number:'));
   assert('Compact label renders compact template', compact.includes('Bill #:'));
-  assert('Detailed (Tax) label falls back to classic until supplied by a tax pack/plugin', detailed.includes('Invoice #:') && !detailed.includes('TAX INVOICE'));
+  assert('Detailed (Tax) label falls back to classic until supplied by a tax pack/plugin', detailed.includes('Number:') && !detailed.includes('TAX INVOICE'));
   assert('only classic and compact are distinct built-ins', new Set([classic, compact, detailed]).size === 2);
 }
 
@@ -1103,7 +1103,10 @@ console.log('\n✅ Test 11: IR country thermal receipt financial-line preservati
     discount_amount: 10000,
     tax_amount: 9000,
     total: 99000,
-    payment_details: [{ method: 'Cash', amount: 99000 }],
+    // Split across two cash entries (not a single payment covering the whole
+    // total) so the applied-amount row still renders — a lone payment equal
+    // to the total is intentionally dropped as redundant with TOTAL.
+    payment_details: [{ method: 'Cash', amount: 59000 }, { method: 'Cash', amount: 40000 }],
   };
 
   // 1. Backend thermal formatter tests with real production currency symbol ('ریال')
@@ -1124,7 +1127,7 @@ console.log('\n✅ Test 11: IR country thermal receipt financial-line preservati
       assert(`[backend IR ${template} unicode=${useUnicode}] preserves TOTAL line`, text.includes('TOTAL') || text.includes('GRAND TOTAL'));
       assert(`[backend IR ${template} unicode=${useUnicode}] preserves TOTAL amount`, text.includes('IRR99,000.00'));
       assert(`[backend IR ${template} unicode=${useUnicode}] preserves Payment line`, text.includes('Cash'));
-      assert(`[backend IR ${template} unicode=${useUnicode}] preserves Payment amount`, text.includes('IRR99,000.00'));
+      assert(`[backend IR ${template} unicode=${useUnicode}] preserves Payment amount`, text.includes('IRR59,000.00') && text.includes('IRR40,000.00'));
       assert(`[backend IR ${template} unicode=${useUnicode}] leaves zero warnings for numeric lines`, warnings.length === 0);
     }
   }
@@ -1215,7 +1218,10 @@ console.log('\n✅ Test 11: IR country thermal receipt financial-line preservati
     discount_amount: 10000,
     tax_amount: 9000,
     total: 99000,
-    payment_details: [{ method: 'Cash', amount: 99000 }],
+    // Split across two cash entries (not a single payment covering the whole
+    // total) so the applied-amount row still renders — a lone payment equal
+    // to the total is intentionally dropped as redundant with TOTAL.
+    payment_details: [{ method: 'Cash', amount: 59000 }, { method: 'Cash', amount: 40000 }],
   };
 
   const encoders = [

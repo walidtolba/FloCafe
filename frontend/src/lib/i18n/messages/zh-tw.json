@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "稅務發票",
     "invoiceTitle": "發票",
-    "invoiceNumber": "發票號：",
+    "invoiceNumber": "號：",
     "time": "時間",
     "customerShort": "顧客",
     "numberShort": "顧客編號",

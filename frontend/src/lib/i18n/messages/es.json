@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "FACTURA CON IMPUESTOS",
     "invoiceTitle": "FACTURA",
-    "invoiceNumber": "Factura N.º:",
+    "invoiceNumber": "N.º:",
     "time": "Hora",
     "customerShort": "Cliente",
     "numberShort": "Cliente N.º",

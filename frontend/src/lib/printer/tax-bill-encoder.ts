@@ -334,10 +334,15 @@ export function buildTaxBillBytes(
   enc.width(1).bold(false);
 
   // ── Payment Details ───────────────────────────────────────────────────────
-  if (bill.payment_details && bill.payment_details.length > 0) {
+  // A single payment covering the whole bill repeats the TOTAL row above with
+  // no new information, so it's skipped; a split across methods is kept.
+  const paymentDetails = bill.payment_details ?? [];
+  const showPaymentDetails = paymentDetails.length > 0
+    && (paymentDetails.length !== 1 || Number(paymentDetails[0].amount) !== Number(bill.total));
+  if (showPaymentDetails) {
     enc.newline();
     safePrinterText(enc, `${labelFor('receipt.payments')}:`, warnings, false, arabicShaping, undefined, undefined, language).newline();
-    for (const p of bill.payment_details) {
+    for (const p of paymentDetails) {
       writeSafeFinancialRow(resolvePaymentLabel(p.method, labelFor), formatAmount(p.amount, currency, amountLocale, trimDecimals, rawEscPos));
     }
   }

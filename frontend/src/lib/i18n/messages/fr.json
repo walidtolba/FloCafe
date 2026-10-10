@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "FACTURE FISCALE",
     "invoiceTitle": "FACTURE",
-    "invoiceNumber": "N° de facture :",
+    "invoiceNumber": "N° :",
     "time": "Heure",
     "customerShort": "Client",
     "numberShort": "N° client",

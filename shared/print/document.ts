@@ -755,36 +755,44 @@ export function buildBillDocument(printData: PrintData, printContext: PrintConte
       : null,
   });
 
+  const paymentLines = bill.payments
+    .filter((payment) => payment.method.length > 0)
+    .map((payment): PaymentsBlock['lines'][number] => {
+      const line = {
+        method: payment.method,
+        label: paymentLabel(labels, payment.method),
+        amount: payment.amount,
+      };
+      const tender = projectCashTender(payment);
+      if (tender === null) return Object.freeze(line);
+      return Object.freeze({
+        ...line,
+        tendered: Object.freeze({
+          label: resolveSemanticLabel(labels, 'receipt.cashReceived'),
+          amount: tender.tendered,
+        }),
+        ...(tender.change > 0
+          ? {
+            change: Object.freeze({
+              label: resolveSemanticLabel(labels, 'pos.changeReturned'),
+              amount: tender.change,
+            }),
+          }
+          : {}),
+      });
+    });
+
+  // A single payment that covers the whole bill repeats the TOTAL row with
+  // no new information (e.g. one cash payment for the full amount) — only
+  // print the payment-method breakdown when it actually tells the reader
+  // something the total didn't (a split across methods, or a partial amount).
+  const showPaymentLines = paymentLines.length !== 1 || paymentLines[0].amount !== bill.total;
+
   const payments: PaymentsBlock = Object.freeze({
     kind: 'payments',
     direction: base,
     heading: resolveSemanticLabel(labels, 'receipt.payments'),
-    lines: Object.freeze(bill.payments
-      .filter((payment) => payment.method.length > 0)
-      .map((payment): PaymentsBlock['lines'][number] => {
-        const line = {
-          method: payment.method,
-          label: paymentLabel(labels, payment.method),
-          amount: payment.amount,
-        };
-        const tender = projectCashTender(payment);
-        if (tender === null) return Object.freeze(line);
-        return Object.freeze({
-          ...line,
-          tendered: Object.freeze({
-            label: resolveSemanticLabel(labels, 'receipt.cashReceived'),
-            amount: tender.tendered,
-          }),
-          ...(tender.change > 0
-            ? {
-              change: Object.freeze({
-                label: resolveSemanticLabel(labels, 'pos.changeReturned'),
-                amount: tender.change,
-              }),
-            }
-            : {}),
-        });
-      })),
+    lines: Object.freeze(showPaymentLines ? paymentLines : []),
   });
 
   const hasOnlineOrderInfo = order.onlinePlatform.length > 0 || order.externalOrderId.length > 0;

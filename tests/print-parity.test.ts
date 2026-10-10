@@ -621,7 +621,7 @@ function run(): void {
     for (const [renderer, text] of renderBill(overpaidBill)) {
       const rows = contentRows(text);
       const appliedRow = rows.find((row) => /\bcash\b/i.test(row) && !row.includes(tenderedLabel));
-      warn(appliedRow != null && digitsOf(appliedRow).includes('150'), `${renderer}: applied cash 150 keeps its own row`);
+      warn(appliedRow == null, `${renderer}: single payment covering the full total skips the redundant applied-amount row`);
       expectNoTenderedOrChangeRows(text, renderer);
     }
 
@@ -685,7 +685,7 @@ function run(): void {
       }), true));
       const rows = contentRows(merchantText);
       const appliedRow = rows.find((row) => /\bcash\b/i.test(row) && !row.includes(tenderedLabel));
-      warn(appliedRow != null && digitsOf(appliedRow).includes('150'), `merchant/classic: applied cash 150 keeps its own row`);
+      warn(appliedRow == null, 'merchant/classic: single payment covering the full total skips the redundant applied-amount row');
       expectNoTenderedOrChangeRows(merchantText, 'merchant/classic');
     }
 

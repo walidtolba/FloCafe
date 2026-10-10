@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "НАЛОГОВЫЙ СЧЁТ",
     "invoiceTitle": "СЧЁТ",
-    "invoiceNumber": "Счёт №:",
+    "invoiceNumber": "№:",
     "time": "Время",
     "customerShort": "Клиент",
     "numberShort": "Номер клиента",

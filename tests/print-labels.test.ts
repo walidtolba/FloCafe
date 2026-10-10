@@ -83,7 +83,10 @@ function buildBill(): any {
     service_charge: 0,
     delivery_charge: 0,
     total: 275,
-    payment_details: [{ method: 'cash', amount: 275 }],
+    // Split across two cash entries (not a single payment covering the
+    // whole total) so the applied-amount row still renders — a lone payment
+    // equal to the total is intentionally dropped as redundant with TOTAL.
+    payment_details: [{ method: 'cash', amount: 200 }, { method: 'cash', amount: 75 }],
   };
 }
 
@@ -137,7 +140,7 @@ function run(): void {
   assert('hi resolves grand total to Hindi', printLabel('hi', 'print.grandTotal') === 'कुल योग');
   assert('bn resolves grand total to Bengali', printLabel('bn', 'print.grandTotal') === 'মোট');
   assert('sq resolves grand total to Albanian', printLabel('sq', 'print.grandTotal') === 'TOTALI');
-  assert('sq resolves invoice and KOT labels', printLabel('sq', 'print.invoiceNumber') === 'Fatura nr.:' && printLabel('sq', 'print.kot.banner') === 'POROSI E KUZHINËS');
+  assert('sq resolves invoice and KOT labels', printLabel('sq', 'print.invoiceNumber') === 'Nr.:' && printLabel('sq', 'print.kot.banner') === 'POROSI E KUZHINËS');
   assert('vi resolves grand total to Vietnamese', printLabel('vi', 'print.grandTotal') === 'TỔNG CỘNG');
   assert('vi resolves kitchen ticket to Vietnamese', printLabel('vi', 'print.kot.banner') === 'PHIẾU BẾP');
   assert('vi resolves cash received from the canonical receipt key', printLabel('vi', 'receipt.cashReceived') === 'Tiền mặt đã nhận');
@@ -179,25 +182,25 @@ function run(): void {
   console.log('\n✅ Test 2: classic receipt honors language');
   {
     const text = escPosToText(formatReceipt(buildOrder(), buildBill(), buildBusiness(), 'classic', 48));
-    assert('default language keeps English labels', text.includes('Invoice #:') && text.includes('TOTAL') && text.includes('Subtotal'));
+    assert('default language keeps English labels', text.includes('Number:') && text.includes('TOTAL') && text.includes('Subtotal'));
     // Persian script requires a printer profile with arabicShaping (#437);
     // label selection itself is independent of that capability.
     const faText = escPosToText(formatReceipt(buildOrder(), buildBill(), buildBusiness(), 'classic', 48, false, false, undefined, [], true, 'fa'));
-    assert('fa classic renders Persian invoice title label', faText.includes('شماره صورتحساب:'));
+    assert('fa classic renders Persian invoice number label', faText.includes('شماره:'));
     assert('fa classic renders Persian grand total', faText.includes('جمع کل'));
     assert('fa classic renders Persian subtotal (borrowed pos.subtotal)', faText.includes('جمع جزء'));
     assert('fa classic localizes cash payment method', faText.includes('نقدی'));
     assert('fa classic translates table prefix', faText.includes('میز:'));
     const urText = escPosToText(formatReceipt(buildOrder(), buildBill(), buildBusiness(), 'classic', 48, false, false, undefined, [], true, 'ur'));
-    assert('ur classic renders Urdu invoice title label', urText.includes('انوائس نمبر:'));
+    assert('ur classic renders Urdu invoice number label', urText.includes('نمبر:'));
     assert('ur classic renders Urdu grand total', urText.includes('کل رقم'));
     assert('ur classic renders Urdu subtotal', urText.includes('ذیلی رقم'));
     assert('ur classic localizes cash payment method', urText.includes('نقد'));
     const deText = escPosToText(formatReceipt(buildOrder(), buildBill(), buildBusiness(), 'classic', 48, false, false, undefined, [], false, 'de'));
-    assert('de classic renders German invoice title label', deText.includes('Rechnungsnr.:') || deText.includes('Rechnung'));
+    assert('de classic renders German invoice number label', deText.includes('Nr.'));
     assert('de classic renders German grand total', deText.includes('GESAMTSUMME'));
     assert('de classic renders German subtotal', deText.includes('Zwischensumme'));
-    assert('unknown language keeps English output', escPosToText(formatReceipt(buildOrder(), buildBill(), buildBusiness(), 'classic', 48, false, false, undefined, [], false, 'xx')).includes('Invoice #:'));
+    assert('unknown language keeps English output', escPosToText(formatReceipt(buildOrder(), buildBill(), buildBusiness(), 'classic', 48, false, false, undefined, [], false, 'xx')).includes('Number:'));
     for (const locale of localeCodes) {
       const localized = renderClassicReceiptViaDocument(buildOrder(), buildBill(), buildBusiness(), {
         columns: 48,

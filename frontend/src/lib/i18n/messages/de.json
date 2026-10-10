@@ -960,7 +960,7 @@
     },
     "taxInvoiceTitle": "STEUERRECHNUNG",
     "invoiceTitle": "Rechnung",
-    "invoiceNumber": "Rechnung Nr.",
+    "invoiceNumber": "Nr.",
     "time": "Uhrzeit",
     "customerShort": "Kunde",
     "numberShort": "Kundennummer",
