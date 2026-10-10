@@ -780,6 +780,8 @@
     "placing": "Bestelling plaatsen…",
     "pointsApproxValue": "{count} punten (≈ {value})",
     "previousItems": "Vorige artikelen (reeds besteld)",
+    "printBillConfirm": "Wilt u de bon voor deze bestelling afdrukken?",
+    "printBillConfirmTitle": "Bon afdrukken?",
     "printHeaderLabel": "Koptekst afdrukken",
     "printKotConfirm": "Wilt u de keukenbon voor deze bestelling afdrukken?",
     "printKotConfirmTitle": "Bon afdrukken?",

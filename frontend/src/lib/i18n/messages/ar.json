@@ -780,6 +780,8 @@
     "placing": "جاري التحميل...",
     "pointsApproxValue": "{count} نقطة (≈ {value})",
     "previousItems": "العناصر السابقة (التي تم طلبها بالفعل)",
+    "printBillConfirm": "هل تريد طباعة فاتورة هذا الطلب؟",
+    "printBillConfirmTitle": "طباعة الفاتورة؟",
     "printHeaderLabel": "طباعة العنوان",
     "printKotConfirm": "هل تريد طباعة تذكرة المطبخ لهذا الطلب؟",
     "printKotConfirmTitle": "طباعة التذكرة؟",

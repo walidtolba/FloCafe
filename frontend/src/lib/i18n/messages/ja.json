@@ -780,6 +780,8 @@
     "placing": "注文中…",
     "pointsApproxValue": "{count}pt（約{value}）",
     "previousItems": "以前の商品（注文済み）",
+    "printBillConfirm": "この注文のレシートを印刷しますか?",
+    "printBillConfirmTitle": "レシートを印刷しますか?",
     "printHeaderLabel": "印刷ヘッダー",
     "printKotConfirm": "この注文のキッチンチケットを印刷しますか?",
     "printKotConfirmTitle": "チケットを印刷しますか?",

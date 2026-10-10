@@ -781,6 +781,8 @@
     "placing": "Membuat...",
     "pointsApproxValue": "{count} poin (≈ {value})",
     "previousItems": "Item Sebelumnya (sudah dipesan)",
+    "printBillConfirm": "Apakah Anda ingin mencetak struk untuk pesanan ini?",
+    "printBillConfirmTitle": "Cetak Struk?",
     "printHeaderLabel": "Cetak kop",
     "printKotConfirm": "Apakah Anda ingin mencetak tiket dapur untuk pesanan ini?",
     "printKotConfirmTitle": "Cetak Tiket?",

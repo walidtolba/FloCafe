@@ -105,6 +105,7 @@ export default function OrdersPage() {
   const { setTablesRequired, autoPrintBill, printerUseUnicode, printerArabicShaping } = usePosSettingsStore();
   const tOrders = useTranslations('orders');
   const tCommon = useTranslations('common');
+  const tPos = useTranslations('pos');
   const tNav = useTranslations('nav');
   const tWhatsappSend = useTranslations('whatsapp.send');
 
@@ -699,6 +700,13 @@ export default function OrdersPage() {
     fetchOrders(undefined, { refreshLoadedPages: true });
 
     if (bill && autoPrintBill) {
+      const shouldPrintBill = await confirm(tPos('printBillConfirm'), {
+        title: tPos('printBillConfirmTitle'),
+        confirmLabel: tCommon('print'),
+        cancelLabel: tCommon('done'),
+      });
+      if (!shouldPrintBill) return;
+
       try {
         const fallbackOrder = orders.find((o) => o.bill?.id === bill.id);
         const { data } = await api.get(`/bills/${bill.id}`);

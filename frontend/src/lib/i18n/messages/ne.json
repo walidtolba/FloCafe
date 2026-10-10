@@ -780,6 +780,8 @@
     "placing": "राख्दै...",
     "pointsApproxValue": "{count} अंक (≈ {value})",
     "previousItems": "अघिल्लो वस्तुहरू (पहिले नै अर्डर गरिएको)",
+    "printBillConfirm": "तपाईं यो अर्डरको रसीद प्रिन्ट गर्न चाहनुहुन्छ?",
+    "printBillConfirmTitle": "रसीद प्रिन्ट गर्ने?",
     "printHeaderLabel": "हेडर प्रिन्ट गर्नुहोस्",
     "printKotConfirm": "तपाईं यो अर्डरको लागि भान्सा टिकट प्रिन्ट गर्न चाहनुहुन्छ?",
     "printKotConfirmTitle": "टिकट प्रिन्ट गर्ने?",

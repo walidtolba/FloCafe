@@ -780,6 +780,8 @@
     "placing": "Envoi...",
     "pointsApproxValue": "{count} pts (≈ {value})",
     "previousItems": "Articles précédents (déjà commandés)",
+    "printBillConfirm": "Voulez-vous imprimer le reçu de cette commande ?",
+    "printBillConfirmTitle": "Imprimer le reçu ?",
     "printHeaderLabel": "Imprimer l’en-tête",
     "printKotConfirm": "Voulez-vous imprimer le ticket de cuisine pour cette commande ?",
     "printKotConfirmTitle": "Imprimer le ticket ?",

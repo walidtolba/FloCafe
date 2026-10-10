@@ -938,7 +938,18 @@ export default function POSPage() {
 
       await printKotIfEnabled(orderData.order);
 
-      await printBillForTenant(paidBill, isPrepaidCheckout);
+      if (isPrepaidCheckout) {
+        if (autoPrintBill) {
+          const shouldPrintBill = await confirm(t('printBillConfirm'), {
+            title: t('printBillConfirmTitle'),
+            confirmLabel: tCommon('print'),
+            cancelLabel: tCommon('done'),
+          });
+          if (shouldPrintBill) await printBillForTenant(paidBill, true);
+        }
+      } else {
+        await printBillForTenant(paidBill, false);
+      }
     } catch (error) {
       if (error instanceof OrderAttemptStorageError) reportOrderStorageFailure(t('processOrderFailed'));
       else reportOrderRequestFailure(error, t('processOrderFailed'));

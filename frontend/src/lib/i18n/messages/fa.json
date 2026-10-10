@@ -780,6 +780,8 @@
     "placing": "در حال ثبت",
     "pointsApproxValue": "{count} امتیاز (≈ {value})",
     "previousItems": "کالاهای پیشین (پیش‌تر سفارش داده‌شده)",
+    "printBillConfirm": "آیا می‌خواهید رسید این سفارش را چاپ کنید؟",
+    "printBillConfirmTitle": "چاپ رسید؟",
     "printHeaderLabel": "سربرگ چاپ",
     "printKotConfirm": "آیا می‌خواهید تیکت آشپزخانه این سفارش را چاپ کنید؟",
     "printKotConfirmTitle": "چاپ تیکت؟",

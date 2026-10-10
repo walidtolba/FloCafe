@@ -780,6 +780,8 @@
     "placing": "กำลังส่ง...",
     "pointsApproxValue": "{count} แต้ม (≈ {value})",
     "previousItems": "สินค้าก่อนหน้า (สั่งซื้อแล้ว)",
+    "printBillConfirm": "คุณต้องการพิมพ์ใบเสร็จสำหรับคำสั่งนี้หรือไม่?",
+    "printBillConfirmTitle": "พิมพ์ใบเสร็จหรือไม่?",
     "printHeaderLabel": "พิมพ์ส่วนหัว",
     "printKotConfirm": "คุณต้องการพิมพ์ตั๋วครัวสำหรับคำสั่งนี้หรือไม่?",
     "printKotConfirmTitle": "พิมพ์ตั๋วหรือไม่?",

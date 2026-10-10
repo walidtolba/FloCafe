@@ -780,6 +780,8 @@
     "placing": "دیا جا رہا ہے...",
     "pointsApproxValue": "{count} پوائنٹس (≈ {value})",
     "previousItems": "پچھلے آئٹمز (پہلے آرڈر شدہ)",
+    "printBillConfirm": "کیا آپ اس آرڈر کی رسید پرنٹ کرنا چاہتے ہیں؟",
+    "printBillConfirmTitle": "رسید پرنٹ کریں؟",
     "printHeaderLabel": "ہیڈر پرنٹ کریں",
     "printKotConfirm": "کیا آپ اس آرڈر کے لیے کچن ٹکٹ پرنٹ کرنا چاہتے ہیں؟",
     "printKotConfirmTitle": "ٹکٹ پرنٹ کریں؟",

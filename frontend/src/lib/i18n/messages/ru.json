@@ -780,6 +780,8 @@
     "placing": "Размещение...",
     "pointsApproxValue": "Баллов: {count} (≈ {value})",
     "previousItems": "Предыдущие товары (уже заказаны)",
+    "printBillConfirm": "Хотите распечатать чек для этого заказа?",
+    "printBillConfirmTitle": "Печатать чек?",
     "printHeaderLabel": "Заголовок чека",
     "printKotConfirm": "Хотите распечатать кухонный тикет для этого заказа?",
     "printKotConfirmTitle": "Печатать тикет?",

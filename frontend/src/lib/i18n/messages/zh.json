@@ -780,6 +780,8 @@
     "placing": "下单中…",
     "pointsApproxValue": "{count} 分（≈ {value}）",
     "previousItems": "先前商品（已点）",
+    "printBillConfirm": "您要为此订单打印收据吗?",
+    "printBillConfirmTitle": "打印收据?",
     "printHeaderLabel": "打印页眉",
     "printKotConfirm": "您要为此订单打印厨房小票吗?",
     "printKotConfirmTitle": "打印小票?",

@@ -780,6 +780,8 @@
     "placing": "Đang đặt...",
     "pointsApproxValue": "{count} điểm (≈ {value})",
     "previousItems": "Món đã gọi trước đó",
+    "printBillConfirm": "Bạn có muốn in biên nhận cho đơn hàng này không?",
+    "printBillConfirmTitle": "In biên nhận?",
     "printHeaderLabel": "In tiêu đề",
     "printKotConfirm": "Bạn có muốn in phiếu bếp cho đơn hàng này không?",
     "printKotConfirmTitle": "In phiếu bếp?",

@@ -780,6 +780,8 @@
     "placing": "Duke vendosur...",
     "pointsApproxValue": "{count} pikë (≈ {value})",
     "previousItems": "Artikujt e mëparshëm (të porositur tashmë)",
+    "printBillConfirm": "Dëshironi të printoni faturën për këtë porosi?",
+    "printBillConfirmTitle": "Printo faturën?",
     "printHeaderLabel": "Ballina e printimit",
     "printKotConfirm": "Dëshironi të printoni biletën e kuzhinës për këtë porosi?",
     "printKotConfirmTitle": "Printo biletën?",

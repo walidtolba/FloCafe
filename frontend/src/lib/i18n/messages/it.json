@@ -780,6 +780,8 @@
     "placing": "Invio in corso...",
     "pointsApproxValue": "{count} pt (≈ {value})",
     "previousItems": "Articoli precedenti (già ordinati)",
+    "printBillConfirm": "Vuoi stampare la ricevuta per questo ordine?",
+    "printBillConfirmTitle": "Stampare la ricevuta?",
     "printHeaderLabel": "Stampa intestazione",
     "printKotConfirm": "Vuoi stampare il ticket da cucina per questo ordine?",
     "printKotConfirmTitle": "Stampare il ticket?",

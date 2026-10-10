@@ -780,6 +780,8 @@
     "placing": "주문 중...",
     "pointsApproxValue": "{count} 포인트 (≈ {value})",
     "previousItems": "이전 항목 (이미 주문됨)",
+    "printBillConfirm": "이 주문의 영수증을 인쇄하시겠습니까?",
+    "printBillConfirmTitle": "영수증을 인쇄하시겠습니까?",
     "printHeaderLabel": "머리글 출력",
     "printKotConfirm": "이 주문의 주방 티켓을 인쇄하시겠습니까?",
     "printKotConfirmTitle": "티켓을 인쇄하시겠습니까?",

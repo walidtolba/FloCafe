@@ -780,6 +780,8 @@
     "placing": "Veriliyor...",
     "pointsApproxValue": "{count} puan (≈ {value})",
     "previousItems": "Önceki Ürünler (Zaten Sipariş Edildi)",
+    "printBillConfirm": "Bu sipariş için fişi yazdırmak ister misiniz?",
+    "printBillConfirmTitle": "Fiş yazdırılsın mı?",
     "printHeaderLabel": "Fiş Başlığı",
     "printKotConfirm": "Bu sipariş için mutfak fişini yazdırmak ister misiniz?",
     "printKotConfirmTitle": "Fiş yazdırılsın mı?",

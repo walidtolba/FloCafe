@@ -780,6 +780,8 @@
     "placing": "Naglalagay...",
     "pointsApproxValue": "{count} pts (≈ {value})",
     "previousItems": "Mga Nakaraang Item (na-order na)",
+    "printBillConfirm": "Gusto mo bang i-print ang resibo para sa order na ito?",
+    "printBillConfirmTitle": "I-print ang Resibo?",
     "printHeaderLabel": "Header ng pag-print",
     "printKotConfirm": "Gusto mo bang i-print ang kitchen ticket para sa order na ito?",
     "printKotConfirmTitle": "I-print ang Ticket?",

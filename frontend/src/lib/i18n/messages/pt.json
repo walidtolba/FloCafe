@@ -780,6 +780,8 @@
     "placing": "Fazendo...",
     "pointsApproxValue": "{count} pts (≈ {value})",
     "previousItems": "Itens Anteriores (já pedidos)",
+    "printBillConfirm": "Deseja imprimir o recibo deste pedido?",
+    "printBillConfirmTitle": "Imprimir recibo?",
     "printHeaderLabel": "Cabeçalho de impressão",
     "printKotConfirm": "Deseja imprimir o ticket da cozinha para este pedido?",
     "printKotConfirmTitle": "Imprimir ticket?",

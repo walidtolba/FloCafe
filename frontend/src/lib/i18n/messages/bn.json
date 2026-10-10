@@ -780,6 +780,8 @@
     "placing": "স্থাপন করা হচ্ছে...",
     "pointsApproxValue": "{count} পয়েন্ট (প্রায় {value})",
     "previousItems": "পূর্ববর্তী আইটেম (ইতিমধ্যে অর্ডার করা হয়েছে)",
+    "printBillConfirm": "আপনি কি এই অর্ডারের রিসিট প্রিন্ট করতে চান?",
+    "printBillConfirmTitle": "রিসিট প্রিন্ট করবেন?",
     "printHeaderLabel": "প্রিন্ট হেডার",
     "printKotConfirm": "আপনি কি এই অর্ডারের কিচেন টিকিট প্রিন্ট করতে চান?",
     "printKotConfirmTitle": "টিকিট প্রিন্ট করবেন?",

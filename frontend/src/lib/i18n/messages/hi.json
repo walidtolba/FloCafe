@@ -780,6 +780,8 @@
     "placing": "प्लेसमेंट...",
     "pointsApproxValue": "{count} अंक (लगभग {value})",
     "previousItems": "पिछला आइटम (पहले से ही ऑर्डर किया गया)",
+    "printBillConfirm": "क्या आप इस ऑर्डर की रसीद प्रिंट करना चाहते हैं?",
+    "printBillConfirmTitle": "रसीद प्रिंट करें?",
     "printHeaderLabel": "प्रिंट हेडर",
     "printKotConfirm": "क्या आप इस ऑर्डर के लिए किचन टिकट प्रिंट करना चाहते हैं?",
     "printKotConfirmTitle": "टिकट प्रिंट करें?",

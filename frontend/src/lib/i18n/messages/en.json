@@ -780,6 +780,8 @@
     "placing": "Placing...",
     "pointsApproxValue": "{count} pts (≈ {value})",
     "previousItems": "Previous Items (already ordered)",
+    "printBillConfirm": "Do you want to print the receipt for this order?",
+    "printBillConfirmTitle": "Print Receipt?",
     "printHeaderLabel": "Print header",
     "printKotConfirm": "Do you want to print the kitchen ticket for this order?",
     "printKotConfirmTitle": "Print Ticket?",

@@ -780,6 +780,8 @@
     "placing": "Wird aufgegeben…",
     "pointsApproxValue": "{count} Pkt. (≈ {value})",
     "previousItems": "Vorherige Artikel (bereits bestellt)",
+    "printBillConfirm": "Möchten Sie den Beleg für diese Bestellung drucken?",
+    "printBillConfirmTitle": "Beleg drucken?",
     "printHeaderLabel": "Kopfzeile drucken",
     "printKotConfirm": "Möchten Sie das Küchenticket für diese Bestellung drucken?",
     "printKotConfirmTitle": "Ticket drucken?",
