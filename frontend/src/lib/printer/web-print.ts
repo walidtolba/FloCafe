@@ -350,7 +350,7 @@ export function generateBillHtml(
     <div class="bill-details">
       <table>
         <tr>
-          <td><strong>${escapeHtml(invoiceNumberLabel)}</strong> <strong>${meta ? directionalValue(meta.invoiceNumber, base) : ''}</strong></td>
+          <td><strong>${escapeHtml(invoiceNumberLabel)}</strong> <strong style="font-size:1.4em;">${meta ? directionalValue(meta.invoiceNumber, base) : ''}</strong></td>
           <td class="text-end"><strong>${escapeHtml(L.date)}</strong> ${meta ? escapeHtml(formatReceiptDate(meta.timestamp.text, tenant, LANGUAGES[lang]?.locale ?? lang)) : ''}</td>
         </tr>
         ${meta?.table ? `<tr><td><strong>${escapeHtml(L.table)}</strong> ${escapeHtml(meta.table.name.text)}</td><td></td></tr>` : ''}
@@ -498,7 +498,7 @@ function getPaperStyles(size: PaperSize): string {
     .online-order-banner .online-order-detail { font-size: 13px; font-weight: normal; letter-spacing: normal; margin-top: 2px; }
     .header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
     .header h1 { font-size: 24px; margin-bottom: 5px; }
-    .header .logo { max-width: 120px; max-height: 120px; margin: 0 auto 8px; display: block; }
+    .header .logo { max-width: 180px; max-height: 180px; margin: 0 auto 8px; display: block; }
     .bill-details { margin-bottom: 15px; }
     .bill-details table { width: 100%; }
     .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }

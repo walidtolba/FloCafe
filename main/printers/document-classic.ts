@@ -444,7 +444,7 @@ export function renderBillDocumentToClassicLines(
           segment.sourceLines.main.push(labelOf(block.title));
           segment.sourceControlLines.main.push(segment.main.at(-1) ?? '');
         }
-        segment.main.push('{CENTER}' + normalize(labelOf(block.invoiceNumberLabel)) + ' {BOLD}' + normalize(block.invoiceNumber.text) + '{/BOLD}{/CENTER}');
+        segment.main.push('{CENTER}' + normalize(labelOf(block.invoiceNumberLabel)) + ' {BOLD}{DOUBLE_HEIGHT}' + normalize(block.invoiceNumber.text) + '{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}');
         segment.sourceLines.main.push(labelOf(block.invoiceNumberLabel) + ' ' + block.invoiceNumber.text);
         segment.sourceControlLines.main.push(segment.main.at(-1) ?? '');
         const date = parseDbTimestamp(block.timestamp.text);

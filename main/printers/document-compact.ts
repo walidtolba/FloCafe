@@ -195,7 +195,7 @@ export function renderBillDocumentToCompactLines(
   const metaStart = lines.length;
   const metaSourceLines: string[] = [];
   if (meta) {
-    lines.push(normalize(labelOf(meta.billNumberLabel)) + ': {BOLD}' + normalize(meta.invoiceNumber.text) + '{/BOLD}');
+    lines.push(normalize(labelOf(meta.billNumberLabel)) + ': {BOLD}{DOUBLE_HEIGHT}' + normalize(meta.invoiceNumber.text) + '{/DOUBLE_HEIGHT}{/BOLD}');
     metaSourceLines.push(labelOf(meta.billNumberLabel) + ': ' + meta.invoiceNumber.text);
     const date = parseDbTimestamp(meta.timestamp.text);
     const dateText = date.toLocaleDateString(options.locale + '-u-nu-latn', tzOptions) + ' ' + date.toLocaleTimeString(options.locale + '-u-nu-latn', tzOptions);

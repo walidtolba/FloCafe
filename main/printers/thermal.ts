@@ -1590,8 +1590,8 @@ export async function rasterizeKotDocumentForWebUsb(
   return { ok: true, data: result.data, warnings: result.warnings, rasterSelected: result.rasterSelected, rasterFailed: result.rasterFailed };
 }
 
-/** Printed banner height cap for a business logo (~17mm at 203dpi): a visible mark, not a poster. */
-const LOGO_MAX_HEIGHT_DOTS = 140;
+/** Printed banner height cap for a business logo (~37mm at 203dpi). */
+const LOGO_MAX_HEIGHT_DOTS = 300;
 
 /**
  * Best-effort GS v 0 bytes for the configured business logo, ready to prepend

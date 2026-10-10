@@ -492,9 +492,9 @@ export function buildClassicReceiptBytes(
     );
     const invoiceRowSuffix = invoiceRow.slice(normalizeThermalText(`${invoiceLabelPrefix}${meta.invoiceNumber.text}`, opts.capabilities).length);
     safePrinterText(enc, invoiceLabelPrefix, warnings, false, arabicShaping);
-    enc.bold(true);
+    enc.bold(true).height(2);
     safePrinterText(enc, meta.invoiceNumber.text, warnings, false, arabicShaping);
-    enc.bold(false);
+    enc.bold(false).height(1);
     safePrinterText(enc, invoiceRowSuffix, warnings, false, arabicShaping);
     enc
       .newline()
@@ -716,9 +716,9 @@ export function buildCompactReceiptBytes(
     );
     const invoiceRowSuffix = invoiceRow.slice(normalizeThermalText(`${invoiceLabelPrefix}${meta.invoiceNumber.text}`, opts.capabilities).length);
     safePrinterText(enc, invoiceLabelPrefix, warnings, false, arabicShaping);
-    enc.bold(true);
+    enc.bold(true).height(2);
     safePrinterText(enc, meta.invoiceNumber.text, warnings, false, arabicShaping);
-    enc.bold(false);
+    enc.bold(false).height(1);
     safePrinterText(enc, invoiceRowSuffix, warnings, false, arabicShaping).newline();
 
     if (meta.table) {

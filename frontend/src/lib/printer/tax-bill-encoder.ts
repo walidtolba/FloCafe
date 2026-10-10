@@ -212,9 +212,9 @@ export function buildTaxBillBytes(
   // ── Bill Details ─────────────────────────────────────────────────────────
   enc.align('left');
   safePrinterText(enc, `${labelFor('receipt.billNumber')}: `, warnings, false, arabicShaping, undefined, cols, language);
-  enc.bold(true);
+  enc.bold(true).height(2);
   safePrinterText(enc, extractBareBillNumber(bill.bill_number), warnings, false, arabicShaping, undefined, cols, language);
-  enc.bold(false).newline();
+  enc.bold(false).height(1).newline();
   const billDate = rawEscPos
     ? formatRawTaxBillDate(bill.order?.created_at, locale, tenant.timezone, opts.capabilities)
     : formatDate(bill.order?.created_at, locale, tenant.timezone ? { timeZone: tenant.timezone } : undefined);
