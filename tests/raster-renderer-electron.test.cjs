@@ -206,6 +206,108 @@ async function run() {
     assert.equal(thaiRender.unit.complete, true);
     assert.ok(area(thaiRender.unit) > 0);
 
+    // Logo rendering: a real Chromium-generated PNG (left half black, right
+    // half white), decoded and thresholded back into a raster band.
+    const logoDataUrl = await surface.webContents.executeJavaScript(`
+      (() => {
+        const c = document.createElement('canvas');
+        c.width = 20; c.height = 10;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 20, 10);
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 10, 10);
+        return c.toDataURL('image/png');
+      })();
+    `);
+    const logoRender = await renderer.render({
+      version: 1,
+      requestId: 'electron-logo',
+      text: '',
+      widthDots: 120,
+      maxBandHeight: 200,
+      direction: 'ltr',
+      style: 'normal',
+      financial: false,
+      maxLines: 1,
+      kind: 'image',
+      image: { dataUrl: logoDataUrl, maxHeightDots: 140 },
+    });
+    assert.equal(logoRender.ok, true, `logo render failed: ${logoRender.code ?? 'unknown'} - ${logoRender.detail ?? 'no detail'}`);
+    assert.equal(logoRender.unit.complete, true);
+    assert.equal(logoRender.unit.financial, false);
+    assert.equal(logoRender.unit.bands.length, 1);
+    const logoBand = logoRender.unit.bands[0];
+    // Never upscaled past its natural 20x10 size, so it's centered with 50px of
+    // white padding on each side within the 120-dot band.
+    assert.equal(logoBand.widthDots, 120);
+    assert.equal(logoBand.heightDots, 10);
+    assert.equal(logoBand.pixels[5 * 120 + 10], 0, 'left padding is white');
+    assert.equal(logoBand.pixels[5 * 120 + 55], 1, 'left half of the logo is black');
+    assert.equal(logoBand.pixels[5 * 120 + 65], 0, 'right half of the logo is white');
+    assert.equal(logoBand.pixels[5 * 120 + 109], 0, 'right padding is white');
+
+    // A logo taller than the natural width is scaled down to maxHeightDots,
+    // not left to overflow it.
+    const tallLogoDataUrl = await surface.webContents.executeJavaScript(`
+      (() => {
+        const c = document.createElement('canvas');
+        c.width = 10; c.height = 100;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 10, 100);
+        return c.toDataURL('image/png');
+      })();
+    `);
+    const tallLogoRender = await renderer.render({
+      version: 1,
+      requestId: 'electron-tall-logo',
+      text: '',
+      widthDots: 120,
+      maxBandHeight: 200,
+      direction: 'ltr',
+      style: 'normal',
+      financial: false,
+      maxLines: 1,
+      kind: 'image',
+      image: { dataUrl: tallLogoDataUrl, maxHeightDots: 50 },
+    });
+    assert.equal(tallLogoRender.ok, true);
+    assert.equal(tallLogoRender.unit.bands[0].heightDots, 50, 'scaled down to respect maxHeightDots');
+
+    // A logo band taller than one GS v 0 command splits across multiple bands,
+    // mirroring how overlong text already splits.
+    const splitLogoRender = await renderer.render({
+      version: 1,
+      requestId: 'electron-split-logo',
+      text: '',
+      widthDots: 120,
+      maxBandHeight: 50,
+      direction: 'ltr',
+      style: 'normal',
+      financial: false,
+      maxLines: 1,
+      kind: 'image',
+      image: { dataUrl: tallLogoDataUrl, maxHeightDots: 100 },
+    });
+    assert.equal(splitLogoRender.ok, true);
+    assert.equal(splitLogoRender.unit.bands.length, 2, 'a 100-dot-tall image splits across two 50-dot bands');
+    assert.ok(splitLogoRender.unit.bands.every((band) => band.heightDots <= 50));
+
+    // A malformed/undecodable logo data: URL fails cleanly instead of hanging.
+    const badLogoRender = await renderer.render({
+      version: 1,
+      requestId: 'electron-bad-logo',
+      text: '',
+      widthDots: 120,
+      maxBandHeight: 200,
+      direction: 'ltr',
+      style: 'normal',
+      financial: false,
+      maxLines: 1,
+      kind: 'image',
+      image: { dataUrl: 'data:image/png;base64,AAAA', maxHeightDots: 140 },
+    });
+    assert.equal(badLogoRender.ok, false);
+    assert.equal(badLogoRender.code, 'render-failed');
+
     surface.webContents.emit('render-process-gone');
     const processFailure = await renderer.render({ ...base, requestId: 'electron-process-failure' });
     assert.deepEqual(processFailure, {

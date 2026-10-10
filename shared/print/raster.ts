@@ -52,6 +52,13 @@ export interface RasterSemanticLineGroup {
   readonly financial?: boolean;
 }
 
+/** A business logo to raster, by value — never a network URL. */
+export interface RasterImageSpec {
+  readonly dataUrl: string;
+  /** Caps the logo's printed height; width always fills the band. */
+  readonly maxHeightDots: number;
+}
+
 export interface RasterRenderRequest {
   readonly version: 1;
   readonly requestId: string;
@@ -67,6 +74,9 @@ export interface RasterRenderRequest {
   readonly maxLines: number;
   /** An optional data: URL for a font bundled by the application, never a network URL. */
   readonly bundledFont?: { readonly family: string; readonly dataUrl: string };
+  /** 'image' rasters `image` instead of `text`; omitted/'text' keeps today's text path. */
+  readonly kind?: 'text' | 'image';
+  readonly image?: RasterImageSpec;
 }
 
 export type RasterRenderResult =
@@ -249,6 +259,12 @@ export function isBundledFontDataUrl(dataUrl: unknown): boolean {
     && /^data:font\/(?:woff2?|truetype|opentype);base64,[A-Za-z0-9+/]+={0,2}$/.test(dataUrl);
 }
 
+/** Same supported formats as the business-logo setting, by value, never a network URL. */
+export function isRasterImageDataUrl(dataUrl: unknown): boolean {
+  return typeof dataUrl === 'string' && dataUrl.length <= 200_000
+    && /^data:image\/(?:png|jpeg|jpg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(dataUrl);
+}
+
 export function isRasterRenderRequest(value: unknown): value is RasterRenderRequest {
   if (!value || typeof value !== 'object') return false;
   const request = value as Partial<RasterRenderRequest>;
@@ -283,7 +299,15 @@ export function isRasterRenderRequest(value: unknown): value is RasterRenderRequ
       && typeof request.bundledFont.family === 'string'
       && /^[A-Za-z0-9 _-]{1,64}$/.test(request.bundledFont.family)
       && isBundledFontDataUrl(request.bundledFont.dataUrl)
-    ));
+    ))
+    && (request.kind === undefined || request.kind === 'text' || request.kind === 'image')
+    && (request.kind !== 'image'
+      ? request.image === undefined
+      : (!!request.image
+        && typeof request.image === 'object'
+        && isRasterImageDataUrl(request.image.dataUrl)
+        && Number.isSafeInteger(request.image.maxHeightDots) && (request.image.maxHeightDots as number) > 0
+        && (request.image.maxHeightDots as number) <= DEFAULT_RASTER_MAX_BAND_HEIGHT * 10));
 }
 
 function isRasterBand(value: unknown): value is RasterBand {

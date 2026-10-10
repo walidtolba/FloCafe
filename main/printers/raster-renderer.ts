@@ -52,6 +52,40 @@ export function rasterRendererHtml(): string {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d', { alpha: false });
       if (!context) return makeFailure(request, 'render-failed', 'Canvas 2D context is unavailable');
+      if (request.kind === 'image') {
+        const img = new Image();
+        const loaded = await new Promise((resolve) => {
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = request.image.dataUrl;
+        });
+        if (!loaded || !img.naturalWidth || !img.naturalHeight) {
+          return makeFailure(request, 'render-failed', 'Logo image failed to load');
+        }
+        const maxW = request.widthDots;
+        const scale = Math.min(maxW / img.naturalWidth, request.image.maxHeightDots / img.naturalHeight, 1);
+        const drawW = Math.max(1, Math.round(img.naturalWidth * scale));
+        const drawH = Math.max(1, Math.round(img.naturalHeight * scale));
+        canvas.width = maxW;
+        canvas.height = drawH;
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, maxW, drawH);
+        context.drawImage(img, Math.floor((maxW - drawW) / 2), 0, drawW, drawH);
+        const imageBytes = context.getImageData(0, 0, maxW, drawH).data;
+        const imagePixels = new Uint8Array(maxW * drawH);
+        for (let i = 0; i < imagePixels.length; i++) {
+          const r = imageBytes[i * 4];
+          const g = imageBytes[i * 4 + 1];
+          const b = imageBytes[i * 4 + 2];
+          imagePixels[i] = (0.299 * r + 0.587 * g + 0.114 * b) < 128 ? 1 : 0;
+        }
+        const imageBands = [];
+        for (let offset = 0; offset < drawH; offset += request.maxBandHeight) {
+          const height = Math.min(request.maxBandHeight, drawH - offset);
+          imageBands.push({ widthDots: maxW, heightDots: height, pixels: imagePixels.slice(offset * maxW, (offset + height) * maxW) });
+        }
+        return { version: 1, requestId: request.requestId, ok: true, unit: { unitId: request.requestId, financial: false, complete: true, bands: imageBands } };
+      }
       const styles = Array.isArray(request.styles) ? request.styles : [request.style];
       const scaleX = styles.includes('double-width') ? 2 : 1;
       const scaleY = styles.includes('double-height') ? 2 : 1;
@@ -406,6 +440,33 @@ export async function renderRasterSemanticUnit(
     return { ok: false, code: 'render-failed', detail: 'Raster renderer returned an incomplete semantic unit', financial };
   }
   return { ok: true, unit: { ...result.unit, financial, complete: true } };
+}
+
+/** Rasters a business logo (by data: URL) into one GS v 0-ready semantic unit. */
+export async function renderLogoRasterUnit(
+  renderer: Pick<ChromiumRasterRenderer, 'render'>,
+  dataUrl: string,
+  widthDots: number,
+  maxBandHeight: number,
+  maxHeightDots: number,
+  requestId: string,
+): Promise<{ ok: true; unit: RasterSemanticUnit } | { ok: false; detail: string }> {
+  const request: RasterRenderRequest = {
+    version: 1,
+    requestId,
+    text: '',
+    widthDots,
+    maxBandHeight,
+    direction: 'ltr',
+    style: 'normal',
+    financial: false,
+    maxLines: 1,
+    kind: 'image',
+    image: { dataUrl, maxHeightDots },
+  };
+  const result = await renderRasterSemanticUnit(renderer, request, false);
+  if (!result.ok) return { ok: false, detail: result.detail };
+  return { ok: true, unit: result.unit };
 }
 
 export interface RasterLineRenderFailure {

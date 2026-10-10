@@ -385,6 +385,65 @@ async function runTests() {
     await new Promise<void>((resolve, reject) => transportServer.close((error) => error ? reject(error) : resolve()));
   }
 
+  // ── Test 10: a configured business logo never blocks or corrupts a print ──
+  console.log('\nTest 10: configured business logo prints successfully (best-effort)');
+  {
+    let logoTransportBytes = 0;
+    let logoDataReceived: () => void = () => {};
+    const logoDataPromise = new Promise<void>((resolve) => { logoDataReceived = resolve; });
+    const logoTransportServer = net.createServer((socket) => {
+      socket.on('data', (chunk) => {
+        logoTransportBytes += chunk.length;
+        logoDataReceived();
+      });
+    });
+    await new Promise<void>((resolve, reject) => {
+      logoTransportServer.once('error', reject);
+      logoTransportServer.listen(0, '127.0.0.1', () => resolve());
+    });
+    const logoTransportAddress = logoTransportServer.address();
+    const logoTransportPort = typeof logoTransportAddress === 'object' && logoTransportAddress ? logoTransportAddress.port : 0;
+    const logoPrinterRes = await request(app).post('/api/printers').send({
+      name: 'Logo Network Printer',
+      connection_type: 'network',
+      ip_address: '127.0.0.1',
+      port: logoTransportPort,
+      is_default: true,
+    });
+    assert(logoPrinterRes.status === 201, `logo printer fixture is created (got ${logoPrinterRes.status})`);
+
+    // Same shape the Settings page stores; real PNG validity doesn't matter
+    // here since a logo is rendered via a Chromium surface this harness
+    // deliberately mocks out (see the `electron` module stub above) — the
+    // actual image decode/threshold/scale path is covered end to end by the
+    // real Electron test in raster-renderer-electron.test.cjs. This test
+    // instead locks in the resilience contract: a configured logo that can't
+    // be rendered must never block or corrupt the underlying print.
+    const logoDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    db.prepare("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES ('business_logo', ?, ?)").run(logoDataUrl, now());
+
+    const logoPrintArgs = [
+      { order_number: 'ORD-LOGO-1', created_at: '2026-01-01 12:00:00', items: [{ product_name: 'Espresso', quantity: 1, total: 10 }] },
+      {
+        bill_number: 'INV-LOGO-1',
+        subtotal: 10,
+        discount_amount: 0,
+        tax_amount: 0,
+        total: 10,
+        payment_details: JSON.stringify([{ method: 'cash', amount: 5 }, { method: 'card', amount: 5 }]),
+      },
+      { name: 'Cafe', country: 'US', currency_symbol: '$', show_tax_breakdown: false },
+      'compact',
+    ] as const;
+    const logoResult = await printReceipt(...logoPrintArgs);
+    assert(logoResult.ok === true, `print with a configured business logo still succeeds (got ${JSON.stringify(logoResult)})`);
+    await Promise.race([logoDataPromise, new Promise<void>((resolve) => setTimeout(resolve, 2000))]);
+    assert(logoTransportBytes > 0, 'receipt bytes are still sent to the printer with a logo configured');
+
+    db.prepare("DELETE FROM settings WHERE key = 'business_logo'").run();
+    await new Promise<void>((resolve, reject) => logoTransportServer.close((error) => error ? reject(error) : resolve()));
+  }
+
   console.log('\n' + '='.repeat(50));
   console.log(`${passed}/${passed + failed} passed, ${failed} failed`);
 

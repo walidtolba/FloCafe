@@ -1551,7 +1551,9 @@ export async function rasterizePrintDocumentForWebUsb(
   if (hasFinancialPrintWarning(result.warnings)) {
     return { ok: false, error: makeFinancialPrintRefusalMessage(result.warnings) };
   }
-  return { ok: true, data: result.data, warnings: result.warnings, rasterSelected: result.rasterSelected, rasterFailed: result.rasterFailed };
+  const logoPrefix = await buildLogoPrefixBytes(capabilities, 'webusb-receipt');
+  const data = logoPrefix.length === 0 ? result.data : Buffer.concat([Buffer.from(logoPrefix), result.data]);
+  return { ok: true, data, warnings: result.warnings, rasterSelected: result.rasterSelected, rasterFailed: result.rasterFailed };
 }
 
 export async function rasterizeKotDocumentForWebUsb(
@@ -1588,6 +1590,38 @@ export async function rasterizeKotDocumentForWebUsb(
   return { ok: true, data: result.data, warnings: result.warnings, rasterSelected: result.rasterSelected, rasterFailed: result.rasterFailed };
 }
 
+/** Printed banner height cap for a business logo (~17mm at 203dpi): a visible mark, not a poster. */
+const LOGO_MAX_HEIGHT_DOTS = 140;
+
+/**
+ * Best-effort GS v 0 bytes for the configured business logo, ready to prepend
+ * to a receipt buffer: `ESC @` + style reset, the raster band, then one line
+ * feed for breathing room before the business name. Never throws — a logo
+ * that fails to load or render just means the receipt prints without one.
+ */
+async function buildLogoPrefixBytes(capabilities: ThermalPrinterCapabilities, requestPrefix: string): Promise<Uint8Array> {
+  if (!rasterCapabilityEnabled(capabilities)) return new Uint8Array(0);
+  const logo = getSettingValue('business_logo');
+  if (!logo || !logo.startsWith('data:image/')) return new Uint8Array(0);
+  try {
+    const { getSharedRasterRenderer, renderLogoRasterUnit } = await import('./raster-renderer');
+    const renderer = getSharedRasterRenderer();
+    const rendered = await renderLogoRasterUnit(
+      renderer,
+      logo,
+      capabilities.raster.widthDots,
+      capabilities.raster.maxBandHeight,
+      LOGO_MAX_HEIGHT_DOTS,
+      `${requestPrefix}-logo-${randomUUID()}`,
+    );
+    if (!rendered.ok) return new Uint8Array(0);
+    const bandBytes = encodeRasterUnits([rendered.unit], capabilities);
+    return new Uint8Array([0x1B, 0x40, 0x1B, 0x45, 0x00, 0x1B, 0x21, 0x00, 0x1B, 0x61, 0x00, ...bandBytes, 0x1B, 0x64, 0x01]);
+  } catch {
+    return new Uint8Array(0);
+  }
+}
+
 async function rasterizeReceiptIfEnabled(
   prepared: ReturnType<typeof prepareReceipt>,
   order: unknown,
@@ -1602,6 +1636,10 @@ async function rasterizeReceiptIfEnabled(
 ): Promise<ReturnType<typeof prepareReceipt>> {
   const { profile, capabilities } = resolvePrinterContext(prepared.printer, arabicShapingOverride);
   if (!rasterCapabilityEnabled(capabilities)) return prepared;
+  const logoPrefix = await buildLogoPrefixBytes(capabilities, 'receipt');
+  const withLogo = (value: ReturnType<typeof prepareReceipt>): ReturnType<typeof prepareReceipt> => (
+    logoPrefix.length === 0 ? value : { ...value, data: Buffer.concat([Buffer.from(logoPrefix), value.data]) }
+  );
   const document = receiptDocumentLines(
     order,
     bill,
@@ -1616,7 +1654,7 @@ async function rasterizeReceiptIfEnabled(
     profile.cutMode,
     capabilities,
   );
-  if (!document) return prepared;
+  if (!document) return withLogo(prepared);
   const result = await rasterizeDocumentLines(document.lines, document.warnings, {
     useUnicode,
     cutMode: profile.cutMode,
@@ -1627,11 +1665,11 @@ async function rasterizeReceiptIfEnabled(
     requestPrefix: 'receipt',
   }, document.rasterGroups);
   if (result.rasterFailed) {
-    return { ...prepared, warnings: [...prepared.warnings, ...result.warnings] };
+    return withLogo({ ...prepared, warnings: [...prepared.warnings, ...result.warnings] });
   }
-  return result.rasterSelected
+  return withLogo(result.rasterSelected
     ? { ...prepared, data: result.data, warnings: result.warnings }
-    : prepared;
+    : prepared);
 }
 
 export function formatReceipt(order: any, bill: any, business?: any, template?: string, cols: number = 48, useUnicode: boolean = false, isReprint: boolean = false, cutMode: PrinterCutMode = 'full', warnings?: PrintWarning[], arabicShaping: boolean = false, language?: string, additionalLanguage?: string, capabilities?: ThermalPrinterCapabilities): Buffer {

@@ -1090,6 +1090,24 @@ async function run(): Promise<void> {
   assert.equal(isRasterRenderRequest({ ...request, bundledFont: { ...request.bundledFont, dataUrl: null } }), false);
   assert.equal(isRasterRenderRequest({ ...request, bundledFont: { ...request.bundledFont, family: 'bad;url(x)' } }), false);
 
+  // A logo render request: 'image' kind requires a valid image data: URL and
+  // a bounded maxHeightDots, and rejects an 'image' field on a 'text' request.
+  const logoRequest = {
+    ...request,
+    kind: 'image' as const,
+    image: { dataUrl: 'data:image/png;base64,AAAA', maxHeightDots: 140 },
+  };
+  assert.equal(isRasterRenderRequest(logoRequest), true);
+  assert.equal(isRasterRenderRequest({ ...request, kind: 'text' as const }), true);
+  assert.equal(isRasterRenderRequest({ ...request, kind: 'bogus' as any }), false);
+  assert.equal(isRasterRenderRequest({ ...request, image: logoRequest.image }), false, 'image field without kind: image is rejected');
+  assert.equal(isRasterRenderRequest({ ...logoRequest, image: undefined }), false, 'kind: image without an image field is rejected');
+  assert.equal(isRasterRenderRequest({ ...logoRequest, image: { ...logoRequest.image, dataUrl: 'https://example.invalid/logo.png' } }), false, 'a network URL is not a valid logo source');
+  assert.equal(isRasterRenderRequest({ ...logoRequest, image: { ...logoRequest.image, dataUrl: 'data:image/svg+xml;base64,AAAA' } }), false, 'unsupported image format is rejected');
+  assert.equal(isRasterRenderRequest({ ...logoRequest, image: { ...logoRequest.image, maxHeightDots: 0 } }), false, 'non-positive maxHeightDots is rejected');
+  assert.equal(isRasterRenderRequest({ ...logoRequest, image: { ...logoRequest.image, maxHeightDots: 1.5 } }), false, 'non-integer maxHeightDots is rejected');
+  assert.equal(isRasterRenderRequest({ ...logoRequest, image: { ...logoRequest.image, maxHeightDots: 100_000 } }), false, 'maxHeightDots above the safety cap is rejected');
+
   const baseLayout = {
     kind: 'financial-item' as const,
     columns: [
