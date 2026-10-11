@@ -1404,10 +1404,7 @@ function receiptDocumentLines(
 ): RasterDocumentLines | null {
   // See formatReceipt's identical placeholder below for why country + currency are both required.
   const biz = business || { name: 'Store', address: '', phone: '', taxRegistrationNumber: '', country: 'US', currency: 'USD' };
-  const rasterBiz = {
-    ...biz,
-    ...(biz.customer_phone ? { customer_phone: maskPhoneOnReceipt(String(biz.customer_phone)) } : {}),
-  };
+  const rasterBiz = { ...biz };
   const selection = parseBillTemplateSelection(template);
   if (selection?.source === 'pack' || selection?.source === 'merchant') return null;
   const normalizedTemplate = normalizeReceiptTemplate(selection?.source === 'core' ? selection.id : template);
