@@ -15,6 +15,7 @@ export interface Tenant {
   id: number;
   business_name: string;
   has_logo?: boolean;
+  has_ticket_logo?: boolean;
   slug: string;
   database_name: string;
   business_type: 'restaurant';

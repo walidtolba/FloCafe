@@ -77,6 +77,9 @@ export interface WebPrintOptions {
   showBusinessName?: boolean;
   /** Absolute URL serving the business logo (e.g. `/api/settings/logo`); omitted when none is configured. */
   logoUrl?: string;
+  /** True when `logoUrl` points at a dedicated ticket logo with its own baked-in
+   * padding — suppresses the legacy fixed margin below the logo. */
+  logoHasOwnSpacing?: boolean;
   showTaxBreakdown?: boolean;
   showCustomerName?: boolean;
   showCustomerPhone?: boolean;
@@ -236,6 +239,7 @@ export function generateBillHtml(
     footerNote,
     businessName,
     logoUrl,
+    logoHasOwnSpacing = false,
     showBusinessName = true,
     showTaxBreakdown = true,
     showCustomerName = true,
@@ -339,7 +343,7 @@ export function generateBillHtml(
     ${messages?.onlineOrderBanner ? `<div class="online-order-banner">${escapeHtml(messages.onlineOrderBanner.label.primary)}${messages.onlineOrderBanner.platform.text ? `<div class="online-order-detail">${escapeHtml(messages.onlineOrderBanner.platform.text)}</div>` : ''}${messages.onlineOrderBanner.externalOrderId.text ? `<div class="online-order-detail">#${escapeHtml(messages.onlineOrderBanner.externalOrderId.text)}</div>` : ''}</div>` : ''}
     <!-- Header -->
     <div class="header">
-      ${logoUrl ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="">` : ''}
+      ${logoUrl ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="" style="margin-bottom:${logoHasOwnSpacing ? '0' : '8px'}">` : ''}
       ${header?.name ? `<h1>${escapeHtml(header.name.text)}</h1>` : ''}
       ${header?.address ? `<p>${escapeHtml(header.address.text).replace(/\n/g, '<br>')}</p>` : ''}
       ${header?.phone && header.phoneLabel ? `<p>${escapeHtml(header.phoneLabel.primary)}: ${directionalValue(header.phone, base)}</p>` : ''}
@@ -498,7 +502,7 @@ function getPaperStyles(size: PaperSize): string {
     .online-order-banner .online-order-detail { font-size: 13px; font-weight: normal; letter-spacing: normal; margin-top: 2px; }
     .header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
     .header h1 { font-size: 24px; margin-bottom: 5px; }
-    .header .logo { max-width: 180px; max-height: 180px; margin: 0 auto 8px; display: block; }
+    .header .logo { max-width: 180px; max-height: 180px; margin: 0 auto; display: block; }
     .bill-details { margin-bottom: 15px; }
     .bill-details table { width: 100%; }
     .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }

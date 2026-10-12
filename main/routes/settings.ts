@@ -131,9 +131,10 @@ function publicSettingsShape(settings: Record<string, string>): Record<string, s
   const publicSettings: Record<string, string> = {};
   for (const [key, value] of Object.entries(settings)) {
     if (isGoogleDriveSettingKey(key)) continue;
-    // Served via GET /settings/logo instead — keeps this frequently-polled
-    // endpoint from carrying a Base64 image blob on every fetch.
-    if (key === 'business_logo') continue;
+    // Served via GET /settings/logo (or /settings/ticket-logo) instead — keeps
+    // this frequently-polled endpoint from carrying a Base64 image blob on
+    // every fetch.
+    if (key === 'business_logo' || key === 'ticket_logo') continue;
     publicSettings[key] = maskSetting(key, value);
   }
   return publicSettings;
@@ -178,6 +179,7 @@ function businessShape(s: Record<string, string>) {
     business_phone: s.business_phone || '',
     instagram_handle: s.instagram_handle || '',
     has_logo: Boolean(s.business_logo),
+    has_ticket_logo: Boolean(s.ticket_logo),
     billing_type: s.billing_type || 'postpaid',
     tables_required: s.tables_required !== 'false',
     tax_registered: s.tax_registered === 'true' || s.tax_registered === '1',
@@ -328,33 +330,72 @@ router.put('/business', requirePermission('settings.manage'), (req: Request, res
   }
 });
 
-// GET /logo — serves the decoded business logo image. No permission gate beyond
-// standard auth: shown to every staff role in the sidebar, same as the business name.
+// PUT /ticket-logo — a logo specifically for printed tickets, independent of
+// the general business_logo (sidebar) brand mark. Empty/undefined means
+// "inherit business_logo at print time" (see main/printers/thermal.ts
+// resolveTicketLogoSetting). Kept as its own route, like business_logo, since
+// it needs image validation the generic wildcard settings route can't do.
+router.put('/ticket-logo', requirePermission('settings.manage'), (req: Request, res: Response) => {
+  try {
+    const { ticket_logo } = req.body;
+    if (ticket_logo !== undefined) {
+      const validation = validateImageDataUri(ticket_logo);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+    }
+    upsertSettings(getDatabase(), { ticket_logo });
+    res.json({ has_ticket_logo: Boolean(ticket_logo) });
+  } catch (error: any) {
+    console.error("[API] Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Shared by GET /logo and GET /ticket-logo — serves the decoded image stored
+// under `settingKey`. No permission gate beyond standard auth: shown to every
+// staff role (sidebar logo, or the ticket-logo preview in Printers settings).
+function sendStoredImage(req: Request, res: Response, settingKey: string): void {
+  const logo = getSettingValue(settingKey);
+  if (!logo || !logo.startsWith('data:')) {
+    res.status(404).json({ error: 'No logo' });
+    return;
+  }
+
+  const decoded = decodeImageDataUri(logo);
+  if (!decoded) {
+    res.status(404).json({ error: 'No logo' });
+    return;
+  }
+  const { contentType, buffer, base64 } = decoded;
+
+  const etag = crypto.createHash('sha256').update(base64).digest('hex');
+  if (req.headers['if-none-match'] === `"${etag}"`) {
+    res.status(304).end();
+    return;
+  }
+
+  res.set({
+    'Content-Type': contentType,
+    'Content-Length': buffer.length,
+    'ETag': `"${etag}"`,
+    'Cache-Control': 'no-cache',
+  });
+  res.send(buffer);
+}
+
 router.get('/logo', (req: Request, res: Response) => {
   try {
-    const logo = getSettingValue('business_logo');
-    if (!logo || !logo.startsWith('data:')) {
-      return res.status(404).json({ error: 'No logo' });
-    }
+    sendStoredImage(req, res, 'business_logo');
+  } catch (error: any) {
+    console.error("[API] Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
-    const decoded = decodeImageDataUri(logo);
-    if (!decoded) {
-      return res.status(404).json({ error: 'No logo' });
-    }
-    const { contentType, buffer, base64 } = decoded;
-
-    const etag = crypto.createHash('sha256').update(base64).digest('hex');
-    if (req.headers['if-none-match'] === `"${etag}"`) {
-      return res.status(304).end();
-    }
-
-    res.set({
-      'Content-Type': contentType,
-      'Content-Length': buffer.length,
-      'ETag': `"${etag}"`,
-      'Cache-Control': 'no-cache',
-    });
-    res.send(buffer);
+router.get('/ticket-logo', (req: Request, res: Response) => {
+  try {
+    sendStoredImage(req, res, 'ticket_logo');
   } catch (error: any) {
     console.error("[API] Internal error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -1034,6 +1075,8 @@ const DEDICATED_SETTING_KEYS = new Set<string>([
   // `business_logo` needs image-format/size validation the wildcard route
   // cannot do; it is only writable through PUT /settings/business.
   'business_logo',
+  // Same reasoning as business_logo; only writable through PUT /settings/ticket-logo.
+  'ticket_logo',
 ]);
 
 function isAllowedWildcardKey(key: string): boolean {

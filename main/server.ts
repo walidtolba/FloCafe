@@ -47,6 +47,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   if (reqPath.startsWith('/api/products/') && reqPath.endsWith('/image') && req.method === 'GET') { next(); return; }
   // Same reasoning for the business logo — a plain <img> tag can't send a Bearer header.
   if (reqPath === '/api/settings/logo' && req.method === 'GET') { next(); return; }
+  if (reqPath === '/api/settings/ticket-logo' && req.method === 'GET') { next(); return; }
   // Login-screen support-ticket paths, rate-limited in support-ticket.ts.
   // Matched exactly (not by prefix) so a lookalike path can't skip auth.
   if (req.method === 'POST' && reqPath === '/api/support-ticket/pre-login') { next(); return; }

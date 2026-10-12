@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
 import Cropper, { type Area } from 'react-easy-crop';
 import { Camera, Upload, X, Check } from 'lucide-react';
 import { compressCroppedImage, MAX_RAW_FILE_SIZE } from '@/lib/image-utils';
+import { useImageFileToDataUri } from '@/hooks/useImageFileToDataUri';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'use-intl';
 
@@ -28,32 +28,20 @@ export default function LogoUploader({ value, onChange, previewUrl }: LogoUpload
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const cropAreaRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
   const [cacheBust] = useState(() => Date.now());
 
-  const processFile = useCallback(async (file: File) => {
-    if (file.size > MAX_RAW_FILE_SIZE) {
-      toast.error(t('imageTooLarge', { size: MAX_RAW_FILE_SIZE / 1024 / 1024 }));
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      toast.error(t('imageSelectFile'));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropSrc(reader.result as string);
+  const { getRootProps, getInputProps, isDragActive, cameraInputRef, onCameraChange } = useImageFileToDataUri({
+    // Bridges the `products`-namespaced translator to the hook's generic
+    // string-key contract — same pattern as PaymentModal's whatsappSendT.
+    t: t as (key: string, values?: Record<string, unknown>) => string,
+    onLoaded: (dataUri) => {
+      setCropSrc(dataUri);
       setMode('cropping');
       setCrop({ x: 0, y: 0 });
       setZoom(1);
-    };
-    reader.onerror = () => {
-      toast.error(t('imageReadFailed'));
-    };
-    reader.readAsDataURL(file);
-  }, [t]);
+    },
+  });
 
   const handleCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     cropAreaRef.current = {
@@ -102,20 +90,6 @@ export default function LogoUploader({ value, onChange, previewUrl }: LogoUpload
     setMode('idle');
     setCropSrc(null);
   }, [onChange]);
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      processFile(acceptedFiles[0]);
-    }
-  }, [processFile]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { 'image/*': [] },
-    maxFiles: 1,
-    noClick: false,
-    noKeyboard: false,
-  });
 
   if (mode === 'cropping' && cropSrc) {
     return (
@@ -205,11 +179,7 @@ export default function LogoUploader({ value, onChange, previewUrl }: LogoUpload
             accept="image/*"
             capture="environment"
             className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) processFile(file);
-              e.target.value = '';
-            }}
+            onChange={onCameraChange}
           />
         </div>
       </div>

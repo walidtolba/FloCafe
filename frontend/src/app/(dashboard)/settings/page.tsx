@@ -1119,6 +1119,11 @@ export default function SettingsPage() {
   });
   const [printingForm, setPrintingForm] = useState<PrintingForm>(initPrinting);
   const [savedPrinting, setSavedPrinting] = useState<PrintingForm>(initPrinting);
+  // Separate from PrintingForm: a dedicated ticket logo, independent of the
+  // general business logo. null means "inherit the restaurant logo at print
+  // time" (see main/printers/thermal.ts resolveTicketLogoSetting).
+  const [ticketLogo, setTicketLogo] = useState<string | 'EXISTING' | null>(null);
+  const [savedTicketLogo, setSavedTicketLogo] = useState<string | 'EXISTING' | null>(null);
   const printingFormRef = useRef(printingForm);
   const mergeHydratedPrinting = (patch: Partial<PrintingForm>, initial: PrintingForm, touchedAtHydrationStart = new Map<string, number>()) => {
     setPrintingForm((previous) => {
@@ -1185,6 +1190,11 @@ export default function SettingsPage() {
         } : {}),
       };
       await api.put('/settings/printing', printingPayload);
+      if (ticketLogo !== 'EXISTING') {
+        await api.put('/settings/ticket-logo', { ticket_logo: ticketLogo });
+      }
+      setSavedTicketLogo(ticketLogo);
+      updateCurrentTenant({ has_ticket_logo: ticketLogo !== null });
       posSettings.setPrinterEnabled(formSnapshot.printerEnabled);
       posSettings.setPrinterPaperSize(formSnapshot.printerPaperSize);
       setPrintMethod(formSnapshot.printMethod);
@@ -1212,7 +1222,10 @@ export default function SettingsPage() {
       setSavingPrinting(false);
     }
   };
-  const resetPrinting = () => setPrintingForm(savedPrinting);
+  const resetPrinting = () => {
+    setPrintingForm(savedPrinting);
+    setTicketLogo(savedTicketLogo);
+  };
 
   // Bill template local state; billTemplateSource preserves pack
   // qualifier if ID collides with core template names.
@@ -1479,6 +1492,8 @@ export default function SettingsPage() {
       };
       setPrintingForm((previous) => ({ ...previous, ...billDisplay }));
       setSavedPrinting((previous) => ({ ...previous, ...billDisplay }));
+      setTicketLogo(d.has_ticket_logo ? 'EXISTING' : null);
+      setSavedTicketLogo(d.has_ticket_logo ? 'EXISTING' : null);
       posSettings.setBillShowName(billDisplay.billShowName);
       posSettings.setBillShowAddress(billDisplay.billShowAddress);
       posSettings.setBillShowPhone(billDisplay.billShowPhone);
@@ -1694,6 +1709,8 @@ export default function SettingsPage() {
         };
         mergeHydratedPrinting(billDisplay, printingAtHydrationStart, hydrationTouchSnapshot);
         setSavedPrinting((previous) => ({ ...previous, ...billDisplay }));
+        setTicketLogo(d.has_ticket_logo ? 'EXISTING' : null);
+        setSavedTicketLogo(d.has_ticket_logo ? 'EXISTING' : null);
         posSettings.setBillShowName(billDisplay.billShowName);
         posSettings.setBillShowAddress(billDisplay.billShowAddress);
         posSettings.setBillShowPhone(billDisplay.billShowPhone);
@@ -4220,6 +4237,9 @@ export default function SettingsPage() {
             pulseCustomMethods={pulseCustomMethods}
             markHydrationTouched={markHydrationTouched}
             confirm={confirm}
+            ticketLogo={ticketLogo}
+            setTicketLogo={setTicketLogo}
+            hasBusinessLogo={Boolean(form.businessLogo)}
           />
         </TabsContent>
 

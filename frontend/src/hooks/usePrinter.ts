@@ -80,7 +80,7 @@ type PaperWidth = 58 | 80;
 /** Tenant fields a browser/thermal receipt needs for locale-correct rendering. */
 type ReceiptTenant = Pick<
   Tenant,
-  'business_name' | 'has_logo' | 'currency' | 'country' | 'timezone' | 'currency_display' | 'number_digits' | 'calendar'
+  'business_name' | 'has_logo' | 'has_ticket_logo' | 'currency' | 'country' | 'timezone' | 'currency_display' | 'number_digits' | 'calendar'
 >;
 
 export interface HardwarePrinter {
@@ -207,7 +207,10 @@ export const usePrinterStore = create<PrinterState>()(
               phone: billShowPhone && billPhone ? billPhone : undefined,
               footerNote: billFooterMessage || undefined,
               businessName: tenant.business_name,
-              logoUrl: tenant.has_logo ? `${api.defaults.baseURL}/settings/logo` : undefined,
+              logoUrl: tenant.has_ticket_logo
+                ? `${api.defaults.baseURL}/settings/ticket-logo`
+                : tenant.has_logo ? `${api.defaults.baseURL}/settings/logo` : undefined,
+              logoHasOwnSpacing: tenant.has_ticket_logo,
               showBusinessName: billShowName,
               showTaxBreakdown: billShowTaxBreakdown,
               showCustomerName: billShowCustomerName,
@@ -397,7 +400,10 @@ export const usePrinterStore = create<PrinterState>()(
               phone: billShowPhone ? (opts?.phone || billPhone || undefined) : undefined,
               footerNote: billFooterMessage || undefined,
               businessName: tenant.business_name,
-              logoUrl: tenant.has_logo ? `${api.defaults.baseURL}/settings/logo` : undefined,
+              logoUrl: tenant.has_ticket_logo
+                ? `${api.defaults.baseURL}/settings/ticket-logo`
+                : tenant.has_logo ? `${api.defaults.baseURL}/settings/logo` : undefined,
+              logoHasOwnSpacing: tenant.has_ticket_logo,
               showBusinessName: billShowName,
               showTaxBreakdown: billShowTaxBreakdown,
               showCustomerName: billShowCustomerName,

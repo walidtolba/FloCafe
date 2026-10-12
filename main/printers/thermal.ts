@@ -1591,21 +1591,37 @@ export async function rasterizeKotDocumentForWebUsb(
 const LOGO_MAX_HEIGHT_DOTS = 300;
 
 /**
- * Best-effort GS v 0 bytes for the configured business logo, ready to prepend
- * to a receipt buffer: `ESC @` + style reset, the raster band, then one line
- * feed for breathing room before the business name. Never throws — a logo
- * that fails to load or render just means the receipt prints without one.
+ * A dedicated `ticket_logo` carries its own baked-in padding (set via the
+ * Printers settings editor), so it supplies its own breathing room before the
+ * business name. Falling back to `business_logo` (no padding support, predates
+ * this setting) keeps the legacy fixed line-feed gap so existing layouts don't
+ * regress to zero spacing.
+ */
+export function resolveTicketLogoSetting(): { logo: string; hasOwnSpacing: boolean } | null {
+  const ticketLogo = getSettingValue('ticket_logo');
+  if (ticketLogo && ticketLogo.startsWith('data:image/')) return { logo: ticketLogo, hasOwnSpacing: true };
+  const businessLogo = getSettingValue('business_logo');
+  if (businessLogo && businessLogo.startsWith('data:image/')) return { logo: businessLogo, hasOwnSpacing: false };
+  return null;
+}
+
+/**
+ * Best-effort GS v 0 bytes for the resolved ticket/business logo, ready to
+ * prepend to a receipt buffer: `ESC @` + style reset, the raster band, then —
+ * only when falling back to business_logo — one fixed line feed for breathing
+ * room before the business name (see resolveTicketLogoSetting). Never throws —
+ * a logo that fails to load or render just means the receipt prints without one.
  */
 async function buildLogoPrefixBytes(capabilities: ThermalPrinterCapabilities, requestPrefix: string): Promise<Uint8Array> {
   if (!rasterCapabilityEnabled(capabilities)) return new Uint8Array(0);
-  const logo = getSettingValue('business_logo');
-  if (!logo || !logo.startsWith('data:image/')) return new Uint8Array(0);
+  const resolved = resolveTicketLogoSetting();
+  if (!resolved) return new Uint8Array(0);
   try {
     const { getSharedRasterRenderer, renderLogoRasterUnit } = await import('./raster-renderer');
     const renderer = getSharedRasterRenderer();
     const rendered = await renderLogoRasterUnit(
       renderer,
-      logo,
+      resolved.logo,
       capabilities.raster.widthDots,
       capabilities.raster.maxBandHeight,
       LOGO_MAX_HEIGHT_DOTS,
@@ -1613,7 +1629,8 @@ async function buildLogoPrefixBytes(capabilities: ThermalPrinterCapabilities, re
     );
     if (!rendered.ok) return new Uint8Array(0);
     const bandBytes = encodeRasterUnits([rendered.unit], capabilities);
-    return new Uint8Array([0x1B, 0x40, 0x1B, 0x45, 0x00, 0x1B, 0x21, 0x00, 0x1B, 0x61, 0x00, ...bandBytes, 0x1B, 0x64, 0x01]);
+    const trailingGap = resolved.hasOwnSpacing ? [] : [0x1B, 0x64, 0x01];
+    return new Uint8Array([0x1B, 0x40, 0x1B, 0x45, 0x00, 0x1B, 0x21, 0x00, 0x1B, 0x61, 0x00, ...bandBytes, ...trailingGap]);
   } catch {
     return new Uint8Array(0);
   }

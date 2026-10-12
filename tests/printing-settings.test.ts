@@ -20,6 +20,7 @@ const {
   initTestDb, createApp, startServer, api, seedOwnerUser, seedManagerUser, assertEqual, getResults, closeDatabase,
 } = require('./helpers/test-setup');
 const { settingsRoutes } = require('../main/routes/settings');
+const { resolveTicketLogoSetting } = require('../main/printers/thermal');
 
 const basePayload = {
   printer_trim_decimals: true,
@@ -103,6 +104,68 @@ async function main() {
     const wildcardResponse = await api(baseUrl, '/api/settings/printer_trim_decimals', { method: 'PUT', headers: owner.authHeader, body: { value: 'true' } });
     assertEqual(wildcardResponse.status, 200, 'legacy wildcard setting writes remain compatible');
     assertPersisted(db, 'printer_trim_decimals', 'true', 'legacy wildcard write still persists');
+
+    console.log('\nDedicated ticket_logo setting');
+
+    const validLogo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    const nowIso = new Date().toISOString();
+
+    // resolveTicketLogoSetting: the pure resolution the print path uses to pick
+    // which logo to render and whether it owns its own breathing-room padding.
+    db.prepare("DELETE FROM settings WHERE key IN ('business_logo', 'ticket_logo')").run();
+    assertEqual(resolveTicketLogoSetting(), null, 'neither logo set resolves to nothing');
+
+    db.prepare("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES ('business_logo', ?, ?)").run(validLogo, nowIso);
+    assertEqual(resolveTicketLogoSetting()?.hasOwnSpacing, false, 'falling back to business_logo keeps the legacy fixed gap');
+
+    db.prepare("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES ('ticket_logo', ?, ?)").run(validLogo, nowIso);
+    const bothSetResolved = resolveTicketLogoSetting();
+    assertEqual(bothSetResolved?.logo, validLogo, 'a dedicated ticket_logo wins over business_logo');
+    assertEqual(bothSetResolved?.hasOwnSpacing, true, 'a dedicated ticket_logo supplies its own gap, no legacy feed added');
+
+    db.prepare("DELETE FROM settings WHERE key = 'business_logo'").run();
+    assertEqual(resolveTicketLogoSetting()?.hasOwnSpacing, true, 'a ticket_logo alone also owns its own spacing');
+    db.prepare("DELETE FROM settings WHERE key IN ('business_logo', 'ticket_logo')").run();
+
+    // PUT /settings/ticket-logo — a validated write, independent of business_logo.
+    const ticketLogoWriteResponse = await api(baseUrl, '/api/settings/ticket-logo', { method: 'PUT', headers: owner.authHeader, body: { ticket_logo: validLogo } });
+    assertEqual(ticketLogoWriteResponse.status, 200, 'owner can set a dedicated ticket logo');
+    assertEqual(ticketLogoWriteResponse.data.has_ticket_logo, true, 'the write response reports the logo is now set');
+    assertPersisted(db, 'ticket_logo', validLogo, 'the ticket logo is persisted under its own key');
+
+    const invalidTicketLogoResponse = await api(baseUrl, '/api/settings/ticket-logo', { method: 'PUT', headers: owner.authHeader, body: { ticket_logo: 'not-a-data-uri' } });
+    assertEqual(invalidTicketLogoResponse.status, 400, 'an invalid ticket logo data URI is rejected');
+    assertPersisted(db, 'ticket_logo', validLogo, 'the invalid write does not overwrite the persisted logo');
+
+    const unauthenticatedTicketLogoWrite = await api(baseUrl, '/api/settings/ticket-logo', { method: 'PUT', body: { ticket_logo: validLogo } });
+    assertEqual(unauthenticatedTicketLogoWrite.status, 401, 'unauthenticated ticket-logo write is rejected');
+
+    // GET /settings/business reports has_ticket_logo alongside has_logo.
+    const businessReadResponse = await api(baseUrl, '/api/settings/business', { headers: owner.authHeader });
+    assertEqual(businessReadResponse.status, 200, 'owner can read business settings');
+    assertEqual(businessReadResponse.data.has_ticket_logo, true, 'has_ticket_logo reflects the persisted ticket logo');
+
+    // GET /settings/ticket-logo — serves the decoded image (like GET /settings/logo).
+    // This harness's auth stub requires a Bearer token on every /api route,
+    // unlike the real app's main/server.ts allow-list for <img>-tag GETs — the
+    // allow-list entry itself is covered by its main/server.ts counterpart for
+    // /api/settings/logo, mirrored for /api/settings/ticket-logo above.
+    const ticketLogoGetResponse = await fetch(`${baseUrl}/api/settings/ticket-logo`, { headers: owner.authHeader });
+    assertEqual(ticketLogoGetResponse.status, 200, 'the stored ticket logo is served');
+    assertEqual(ticketLogoGetResponse.headers.get('content-type'), 'image/png', 'the served logo keeps its original content type');
+
+    // Clearing it (ticket_logo: null) falls back to the restaurant logo again.
+    const clearTicketLogoResponse = await api(baseUrl, '/api/settings/ticket-logo', { method: 'PUT', headers: owner.authHeader, body: { ticket_logo: null } });
+    assertEqual(clearTicketLogoResponse.status, 200, 'owner can clear the ticket logo');
+    assertEqual(clearTicketLogoResponse.data.has_ticket_logo, false, 'the clear response reports no ticket logo is set');
+    assertPersisted(db, 'ticket_logo', '', 'clearing the ticket logo empties the stored value');
+
+    const clearedGetResponse = await fetch(`${baseUrl}/api/settings/ticket-logo`, { headers: owner.authHeader });
+    assertEqual(clearedGetResponse.status, 404, 'no stored ticket logo serves 404, matching GET /settings/logo for an unset business_logo');
+
+    // DEDICATED_SETTING_KEYS: the generic wildcard route refuses to write it.
+    const wildcardTicketLogoResponse = await api(baseUrl, '/api/settings/ticket_logo', { method: 'PUT', headers: owner.authHeader, body: { value: validLogo } });
+    assertEqual(wildcardTicketLogoResponse.status, 403, 'the generic wildcard route refuses to write ticket_logo');
 
     console.log(`\n${getResults().passed}/${getResults().total} passed`);
     if (getResults().failed) process.exit(1);

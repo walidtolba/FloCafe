@@ -5799,6 +5799,13 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
       }
     },
   },
+  {
+    version: 109,
+    name: 'add_ticket_logo_setting',
+    up: () => {
+      insertSettingIfMissing('ticket_logo', '');
+    },
+  },
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {
@@ -6559,6 +6566,7 @@ function seedInstallDefaults(): void {
   insert('business_phone', '');
   insert('instagram_handle', '');
   insert('business_logo', '');
+  insert('ticket_logo', '');
   insert('tax_registered', 'false');
   insert('tax_registration_number', '');
   insert('state_code', '');

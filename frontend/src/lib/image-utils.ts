@@ -2,7 +2,7 @@
 
 const MAX_BASE64_LENGTH = 50_000;
 
-type CropArea = { x: number; y: number; width: number; height: number };
+export type CropArea = { x: number; y: number; width: number; height: number };
 
 const CROP_ENCODING_ATTEMPTS = [
   { size: 400, quality: 0.8 },
@@ -23,6 +23,70 @@ export function compressCroppedImage(image: HTMLImageElement, crop: CropArea): s
       if (!ctx) return null;
 
       ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, size, size);
+      const dataUri = canvas.toDataURL('image/webp', quality);
+      if (dataUri !== 'data:,' && dataUri.length <= MAX_BASE64_LENGTH) return dataUri;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+export type LogoPadding = { top: number; right: number; bottom: number; left: number };
+
+/** Max padding per side, as a fraction of the crop's own width/height — caps
+ * opposite sides at a combined 80%, leaving a 20% floor for the logo itself. */
+const MAX_LOGO_PADDING_FRACTION = 0.4;
+
+const PADDED_CROP_ENCODING_ATTEMPTS = [
+  { scale: 1, quality: 0.8 },
+  { scale: 1, quality: 0.6 },
+  { scale: 1, quality: 0.4 },
+  { scale: 0.75, quality: 0.6 },
+  { scale: 0.75, quality: 0.4 },
+  { scale: 0.5, quality: 0.6 },
+];
+
+/**
+ * Encodes a free-aspect crop (any ratio, not forced square) with four
+ * independent padding fractions baked in as opaque white whitespace around
+ * the image — e.g. the bottom padding becomes the printed gap before the
+ * business name on a ticket logo. Each padding value is a fraction (0–0.4) of
+ * the crop's own width/height, so it scales with whatever was cropped rather
+ * than needing a fixed pixel budget per aspect ratio.
+ */
+export function compressCroppedImageWithPadding(
+  image: HTMLImageElement,
+  crop: CropArea,
+  padding: LogoPadding,
+): string | null {
+  const clamp = (value: number) => Math.min(MAX_LOGO_PADDING_FRACTION, Math.max(0, value));
+  const top = clamp(padding.top);
+  const right = clamp(padding.right);
+  const bottom = clamp(padding.bottom);
+  const left = clamp(padding.left);
+
+  try {
+    for (const { scale, quality } of PADDED_CROP_ENCODING_ATTEMPTS) {
+      const innerWidth = Math.max(1, Math.round(crop.width * scale));
+      const innerHeight = Math.max(1, Math.round(crop.height * scale));
+      const padLeft = Math.round(innerWidth * left);
+      const padRight = Math.round(innerWidth * right);
+      const padTop = Math.round(innerHeight * top);
+      const padBottom = Math.round(innerHeight * bottom);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = innerWidth + padLeft + padRight;
+      canvas.height = innerHeight + padTop + padBottom;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      // Printed on a white receipt — padding must be opaque white, not transparent.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, padLeft, padTop, innerWidth, innerHeight);
+
       const dataUri = canvas.toDataURL('image/webp', quality);
       if (dataUri !== 'data:,' && dataUri.length <= MAX_BASE64_LENGTH) return dataUri;
     }

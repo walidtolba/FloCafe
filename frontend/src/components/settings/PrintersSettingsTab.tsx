@@ -22,6 +22,7 @@ import { useTranslations, type AppConfig } from 'use-intl';
 import { Ltr } from '@/components/layout/Ltr';
 import { Toggle } from '@/components/settings/Toggle';
 import { SettingsTabShell } from '@/components/settings/SettingsTabShell';
+import TicketLogoUploader from '@/components/settings/TicketLogoUploader';
 import { LANGUAGES, type Language } from '@/lib/i18n';
 import { isTemplateCardSelected, type BillTemplateSelectionSource } from '@/lib/bill-template-picker';
 import { type PaperSize, type BillTemplate } from '@/store/pos-settings';
@@ -139,6 +140,9 @@ export interface PrintersSettingsTabProps {
   pulseCustomMethods: string[];
   markHydrationTouched: (field: string) => void;
   confirm: (message: string, options?: { title?: string; confirmLabel?: string; destructive?: boolean }) => Promise<boolean>;
+  ticketLogo: string | 'EXISTING' | null;
+  setTicketLogo: (value: string | 'EXISTING' | null) => void;
+  hasBusinessLogo: boolean;
 }
 
 export function PrintersSettingsTab({
@@ -157,6 +161,9 @@ export function PrintersSettingsTab({
   pulseCustomMethods,
   markHydrationTouched,
   confirm,
+  ticketLogo,
+  setTicketLogo,
+  hasBusinessLogo,
 }: PrintersSettingsTabProps) {
   const t = useTranslations('settings');
   const tCommon = useTranslations('common');
@@ -1067,6 +1074,17 @@ export function PrintersSettingsTab({
                     />
                   </div>
                 </div>
+              </div>
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="font-medium text-foreground mb-1">{t('ticketLogoLabel')}</p>
+                <p className="text-sm text-muted-foreground mb-3">{t('ticketLogoHint')}</p>
+                <TicketLogoUploader
+                  value={ticketLogo}
+                  onChange={setTicketLogo}
+                  previewUrl={`${api.defaults.baseURL}/settings/ticket-logo`}
+                  fallbackPreviewUrl={`${api.defaults.baseURL}/settings/logo`}
+                  hasFallbackLogo={hasBusinessLogo}
+                />
               </div>
               <div className="mt-4 border-t border-border pt-4">
                 <label

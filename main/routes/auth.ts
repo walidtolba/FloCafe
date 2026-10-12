@@ -61,6 +61,7 @@ function buildLocalTenant(db: ReturnType<typeof getDatabase>, userId: string, us
     id: 1,
     business_name: s.business_name || 'Store',
     has_logo: Boolean(s.business_logo),
+    has_ticket_logo: Boolean(s.ticket_logo),
     slug: 'local',
     database_name: 'local',
     business_type: s.business_type || 'restaurant',
