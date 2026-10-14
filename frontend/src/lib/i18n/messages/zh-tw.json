@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "標籤關閉按鈕已移至取消標籤按鈕",
     "cartTabInlineCloseEnabled": "現在每個標籤上都會顯示關閉按鈕",
     "cartTabInlineCloseHint": "開啟：每個標籤都顯示自己的 X 按鈕以關閉。關閉：選擇一個標籤，然後使用取消標籤按鈕將其關閉——如果標籤太小難以精確點擊，這會很有用。",
+    "cartTabChipWidth": "標籤寬度",
+    "cartTabChipWidthHint": "調整每個訂單標籤的寬度 — 更寬可以更容易點擊關閉按鈕。",
     "cartTabKeepOpenOnPlaceOrder": "下單後保持標籤開啟",
     "cartTabKeepOpenOnPlaceOrderDisabled": "現在下單會關閉其標籤",
     "cartTabKeepOpenOnPlaceOrderEnabled": "現在下單會重置標籤而不是關閉它",

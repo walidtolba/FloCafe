@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Schließen-Schaltfläche in eine Tab-abbrechen-Schaltfläche verschoben",
     "cartTabInlineCloseEnabled": "Schließen-Schaltfläche wird auf jedem Tab angezeigt",
     "cartTabInlineCloseHint": "Ein: Jeder Tab zeigt ein eigenes X zum Schließen. Aus: Wählen Sie einen Tab aus und verwenden Sie dann die Schaltfläche „Tab abbrechen“ – nützlich, wenn die Tabs zu klein sind, um präzise zu tippen.",
+    "cartTabChipWidth": "Breite der Tab-Chips",
+    "cartTabChipWidthHint": "Passe an, wie breit jeder Bestell-Tab ist — breiter macht die Schließen-Schaltfläche leichter zu treffen.",
     "cartTabKeepOpenOnPlaceOrder": "Tab nach Bestellaufgabe offen halten",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Beim Aufgeben einer Bestellung wird der Tab jetzt geschlossen",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Beim Aufgeben einer Bestellung wird der Tab jetzt zurückgesetzt statt geschlossen",

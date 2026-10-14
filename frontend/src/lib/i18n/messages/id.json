@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Tombol tutup tab dipindahkan ke tombol Batalkan Tab",
     "cartTabInlineCloseEnabled": "Tombol tutup tab kini ditampilkan di setiap tab",
     "cartTabInlineCloseHint": "Aktif: setiap tab menampilkan tombol X sendiri untuk menutupnya. Nonaktif: pilih tab, lalu gunakan tombol Batalkan Tab untuk menutupnya — berguna jika tab terlalu kecil untuk diketuk dengan tepat.",
+    "cartTabChipWidth": "Lebar Chip Tab",
+    "cartTabChipWidthHint": "Sesuaikan lebar setiap tab pesanan — lebih lebar memudahkan menekan tombol tutup.",
     "cartTabKeepOpenOnPlaceOrder": "Pertahankan Tab Tetap Terbuka Setelah Memesan",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Memesan kini menutup tabnya",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Memesan kini mereset tabnya alih-alih menutupnya",

@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Nút đóng tab đã được chuyển sang nút Hủy tab",
     "cartTabInlineCloseEnabled": "Nút đóng tab giờ đây hiển thị trên mỗi tab",
     "cartTabInlineCloseHint": "Bật: mỗi tab hiển thị nút X riêng để đóng. Tắt: chọn một tab, sau đó dùng nút Hủy tab để đóng — hữu ích nếu các tab quá nhỏ để chạm chính xác.",
+    "cartTabChipWidth": "Chiều rộng thẻ tab",
+    "cartTabChipWidthHint": "Điều chỉnh độ rộng của mỗi tab đơn hàng — rộng hơn giúp dễ nhấn nút đóng hơn.",
     "cartTabKeepOpenOnPlaceOrder": "Giữ tab mở sau khi đặt đơn hàng",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Giờ đây việc đặt đơn hàng sẽ đóng tab của nó",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Giờ đây việc đặt đơn hàng sẽ đặt lại tab thay vì đóng nó",

@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Sluitknop van tabblad verplaatst naar een knop Tabblad annuleren",
     "cartTabInlineCloseEnabled": "Sluitknop wordt nu op elk tabblad getoond",
     "cartTabInlineCloseHint": "Aan: elk tabblad toont zijn eigen X om het te sluiten. Uit: selecteer een tabblad en gebruik vervolgens de knop Tabblad annuleren om het te sluiten — handig als tabbladen te klein zijn om precies aan te tikken.",
+    "cartTabChipWidth": "Breedte van taboog",
+    "cartTabChipWidthHint": "Pas aan hoe breed elke besteltab is — breder maakt de sluitknop makkelijker te raken.",
     "cartTabKeepOpenOnPlaceOrder": "Tabblad open houden na het plaatsen van een bestelling",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Het plaatsen van een bestelling sluit nu het tabblad",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Het plaatsen van een bestelling reset het tabblad nu in plaats van het te sluiten",

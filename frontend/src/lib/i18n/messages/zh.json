@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "标签关闭按钮已移至取消标签按钮",
     "cartTabInlineCloseEnabled": "现在每个标签上都会显示关闭按钮",
     "cartTabInlineCloseHint": "开启：每个标签都显示自己的 X 按钮以关闭。关闭：选择一个标签，然后使用取消标签按钮将其关闭——如果标签太小难以精确点击，这会很有用。",
+    "cartTabChipWidth": "标签宽度",
+    "cartTabChipWidthHint": "调整每个订单标签的宽度 — 更宽可以更容易点击关闭按钮。",
     "cartTabKeepOpenOnPlaceOrder": "下单后保持标签打开",
     "cartTabKeepOpenOnPlaceOrderDisabled": "现在下单会关闭其标签",
     "cartTabKeepOpenOnPlaceOrderEnabled": "现在下单会重置标签而不是关闭它",

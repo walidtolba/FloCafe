@@ -109,7 +109,7 @@ export default function POSPage() {
   const isRestaurant = (currentTenant?.business_type ?? 'restaurant') === 'restaurant';
   const cart = useCartStore();
   const heldOrders = useHeldOrdersStore();
-  const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled, cartTabInlineClose, cartTabsAllowMultipleEmpty, cartTabKeepOpenOnPlaceOrder, quickAddEnabled } = usePosSettingsStore();
+  const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled, cartTabInlineClose, cartTabsAllowMultipleEmpty, cartTabKeepOpenOnPlaceOrder, cartTabChipWidth, quickAddEnabled } = usePosSettingsStore();
   const { open: leftSidebarOpen } = useSidebar();
   const t = useTranslations('pos');
   const tCommon = useTranslations('common');
@@ -1269,6 +1269,7 @@ export default function POSPage() {
         tabs={cart.cartTabs()}
         disabled={anyModalOpen || submitting || holding}
         inlineClose={cartTabInlineClose}
+        chipWidth={cartTabChipWidth}
         onNew={() => cart.addCartTab({ allowBlank: cartTabsAllowMultipleEmpty })}
         onSwitch={cart.switchCartTab}
         onClose={handleCloseCartTab}

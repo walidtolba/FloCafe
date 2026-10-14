@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Il pulsante di chiusura della scheda è stato spostato in un pulsante Annulla scheda",
     "cartTabInlineCloseEnabled": "Il pulsante di chiusura della scheda è mostrato su ogni scheda",
     "cartTabInlineCloseHint": "Attivo: ogni scheda mostra una propria X per chiuderla. Disattivo: seleziona una scheda, poi usa il pulsante Annulla scheda per chiuderla — utile se le schede sono troppo piccole per essere toccate con precisione.",
+    "cartTabChipWidth": "Larghezza della scheda",
+    "cartTabChipWidthHint": "Regola la larghezza di ogni scheda ordine — più larga rende più facile toccare il pulsante di chiusura.",
     "cartTabKeepOpenOnPlaceOrder": "Mantieni la scheda aperta dopo aver effettuato l'ordine",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Effettuare un ordine ora chiude la sua scheda",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Effettuare un ordine ora reimposta la scheda invece di chiuderla",

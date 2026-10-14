@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "탭 닫기 버튼이 탭 취소 버튼으로 이동되었습니다",
     "cartTabInlineCloseEnabled": "이제 각 탭에 닫기 버튼이 표시됩니다",
     "cartTabInlineCloseHint": "켜짐: 각 탭에 닫기 위한 자체 X 버튼이 표시됩니다. 꺼짐: 탭을 선택한 다음 탭 취소 버튼을 사용해 닫습니다 — 탭이 너무 작아 정확히 탭하기 어려울 때 유용합니다.",
+    "cartTabChipWidth": "탭 칩 너비",
+    "cartTabChipWidthHint": "각 주문 탭의 너비를 조정합니다 — 넓을수록 닫기 버튼을 누르기 쉬워집니다.",
     "cartTabKeepOpenOnPlaceOrder": "주문 후에도 탭 열어두기",
     "cartTabKeepOpenOnPlaceOrderDisabled": "이제 주문하면 해당 탭이 닫힙니다",
     "cartTabKeepOpenOnPlaceOrderEnabled": "이제 주문하면 탭이 닫히는 대신 초기화됩니다",

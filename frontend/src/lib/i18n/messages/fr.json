@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Le bouton de fermeture de l'onglet a été remplacé par un bouton Annuler l'onglet",
     "cartTabInlineCloseEnabled": "Le bouton de fermeture de l'onglet s'affiche sur chaque onglet",
     "cartTabInlineCloseHint": "Activé : chaque onglet affiche son propre X pour le fermer. Désactivé : sélectionnez un onglet, puis utilisez le bouton Annuler l'onglet pour le fermer — utile si les onglets sont trop petits pour être touchés avec précision.",
+    "cartTabChipWidth": "Largeur des onglets",
+    "cartTabChipWidthHint": "Ajustez la largeur de chaque onglet de commande — plus large facilite le clic sur le bouton de fermeture.",
     "cartTabKeepOpenOnPlaceOrder": "Garder l'onglet ouvert après avoir passé la commande",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Passer une commande ferme désormais son onglet",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Passer une commande réinitialise désormais l'onglet au lieu de le fermer",

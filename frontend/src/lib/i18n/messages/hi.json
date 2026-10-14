@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "टैब बंद करें बटन को टैब रद्द करें बटन में ले जाया गया",
     "cartTabInlineCloseEnabled": "हर टैब पर बंद करें बटन दिखाया जा रहा है",
     "cartTabInlineCloseHint": "चालू: हर टैब को बंद करने के लिए अपना खुद का X बटन दिखाता है। बंद: एक टैब चुनें, फिर उसे बंद करने के लिए टैब रद्द करें बटन का उपयोग करें — यह तब उपयोगी है जब टैब सटीक रूप से टैप करने के लिए बहुत छोटे हों।",
+    "cartTabChipWidth": "टैब चिप की चौड़ाई",
+    "cartTabChipWidthHint": "हर ऑर्डर टैब की चौड़ाई समायोजित करें — अधिक चौड़ाई से क्लोज़ बटन दबाना आसान हो जाता है।",
     "cartTabKeepOpenOnPlaceOrder": "ऑर्डर देने के बाद टैब खुला रखें",
     "cartTabKeepOpenOnPlaceOrderDisabled": "अब ऑर्डर देने पर उसका टैब बंद हो जाता है",
     "cartTabKeepOpenOnPlaceOrderEnabled": "अब ऑर्डर देने पर टैब बंद होने के बजाय रीसेट होता है",

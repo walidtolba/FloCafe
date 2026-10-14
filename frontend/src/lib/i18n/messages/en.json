@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Tab close button moved to a Cancel Tab button",
     "cartTabInlineCloseEnabled": "Tab close button shown on each tab",
     "cartTabInlineCloseHint": "On: each tab shows its own X to close it. Off: select a tab, then use the Cancel Tab button to close it — useful if tabs are too small to tap precisely.",
+    "cartTabChipWidth": "Tab Chip Width",
+    "cartTabChipWidthHint": "Adjust how wide each order tab is — wider makes the close button easier to tap.",
     "cartTabKeepOpenOnPlaceOrder": "Keep Tab Open After Placing Order",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Placing an order now closes its tab",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Placing an order now resets its tab instead of closing it",

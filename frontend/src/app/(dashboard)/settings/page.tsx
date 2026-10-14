@@ -3273,6 +3273,26 @@ export default function SettingsPage() {
                     toast.success(v ? t('cartTabInlineCloseEnabled') : t('cartTabInlineCloseDisabled'), { id: 'pos-local' });
                   }} />
                 </div>
+                {posSettings.cartTabInlineClose && (
+                  <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground">{t('cartTabChipWidth')}</p>
+                      <p className="text-sm text-muted-foreground">{t('cartTabChipWidthHint')}</p>
+                    </div>
+                    <div className="flex items-center gap-2 w-40 shrink-0">
+                      <input
+                        type="range"
+                        min={160}
+                        max={360}
+                        step={8}
+                        value={posSettings.cartTabChipWidth}
+                        onChange={(e) => posSettings.setCartTabChipWidth(Number(e.target.value))}
+                        className="flex-1"
+                      />
+                      <span className="text-xs tabular-nums text-muted-foreground w-12 text-end">{posSettings.cartTabChipWidth}px</span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">{t('cartTabsAllowMultipleEmpty')}</p>

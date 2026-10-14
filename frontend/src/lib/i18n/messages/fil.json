@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "Inilipat ang close button ng tab sa isang Kanselahin ang Tab button",
     "cartTabInlineCloseEnabled": "Ipinapakita na ngayon ang close button sa bawat tab",
     "cartTabInlineCloseHint": "Naka-on: may sariling X na button ang bawat tab para isara ito. Naka-off: pumili ng tab, pagkatapos gamitin ang Kanselahin ang Tab button para isara ito — kapaki-pakinabang kung masyadong maliit ang mga tab para pindutin nang tama.",
+    "cartTabChipWidth": "Lapad ng Tab Chip",
+    "cartTabChipWidthHint": "I-adjust kung gaano kalapad ang bawat order tab — mas malapad, mas madaling pindutin ang close button.",
     "cartTabKeepOpenOnPlaceOrder": "Panatilihing Bukas ang Tab Pagkatapos Mag-order",
     "cartTabKeepOpenOnPlaceOrderDisabled": "Sa pag-order ngayon, nagsasara na ang tab nito",
     "cartTabKeepOpenOnPlaceOrderEnabled": "Sa pag-order ngayon, nagre-reset ang tab sa halip na magsara",

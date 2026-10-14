@@ -1572,6 +1572,8 @@
     "cartTabInlineCloseDisabled": "ٹیب بند کرنے کا بٹن ٹیب منسوخ کریں بٹن میں منتقل کر دیا گیا",
     "cartTabInlineCloseEnabled": "اب ہر ٹیب پر بند کرنے کا بٹن دکھایا جاتا ہے",
     "cartTabInlineCloseHint": "آن: ہر ٹیب بند کرنے کے لیے اپنا X بٹن دکھاتا ہے۔ آف: ایک ٹیب منتخب کریں، پھر اسے بند کرنے کے لیے ٹیب منسوخ کریں بٹن استعمال کریں — یہ اس وقت مفید ہے جب ٹیبز درست طریقے سے ٹیپ کرنے کے لیے بہت چھوٹے ہوں۔",
+    "cartTabChipWidth": "ٹیب چپ کی چوڑائی",
+    "cartTabChipWidthHint": "ہر آرڈر ٹیب کی چوڑائی ایڈجسٹ کریں — زیادہ چوڑائی بند کرنے کا بٹن دبانا آسان بناتی ہے۔",
     "cartTabKeepOpenOnPlaceOrder": "آرڈر دینے کے بعد ٹیب کھلا رکھیں",
     "cartTabKeepOpenOnPlaceOrderDisabled": "اب آرڈر دینے پر اس کا ٹیب بند ہو جاتا ہے",
     "cartTabKeepOpenOnPlaceOrderEnabled": "اب آرڈر دینے پر ٹیب بند ہونے کی بجائے ری سیٹ ہوتا ہے",
