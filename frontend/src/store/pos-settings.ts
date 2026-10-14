@@ -14,6 +14,8 @@ export type BillTemplate = CoreBillTemplate | (string & {});
 
 export interface PosSettingsState {
   showProductImages: boolean;
+  // Tap a product to add it directly instead of opening the item popup.
+  quickAddEnabled: boolean;
   customerMandatory: boolean;
   // Auto-advances phone to name when typed digits form a valid number.
   enforcePhoneLength: boolean;
@@ -68,6 +70,7 @@ export interface PosSettingsState {
   kotLanguagePolicy: KotLanguagePolicy;
   // Actions
   setShowProductImages: (show: boolean) => void;
+  setQuickAddEnabled: (v: boolean) => void;
   setCustomerMandatory: (mandatory: boolean) => void;
   setEnforcePhoneLength: (enabled: boolean) => void;
   setCartTabInlineClose: (v: boolean) => void;
@@ -112,6 +115,7 @@ export const usePosSettingsStore = create<PosSettingsState>()(
   persist(
     (set) => ({
       showProductImages: true,
+      quickAddEnabled: false,
       customerMandatory: false,
       enforcePhoneLength: false,
       cartTabInlineClose: true,
@@ -159,6 +163,7 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       kotLanguagePolicy: defaultPrintLanguagePolicy(),
       // Actions
       setShowProductImages: (show) => set({ showProductImages: show }),
+      setQuickAddEnabled: (v) => set({ quickAddEnabled: v }),
       setCustomerMandatory: (mandatory) => set({ customerMandatory: mandatory }),
       setEnforcePhoneLength: (enabled) => set({ enforcePhoneLength: enabled }),
       setCartTabInlineClose: (v) => set({ cartTabInlineClose: v }),

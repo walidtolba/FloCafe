@@ -46,7 +46,7 @@ import { useSupportTicketStatus } from '@/hooks/useSupportTicketStatus';
 import { useSupportDiagnosticsPreview } from '@/hooks/useSupportDiagnosticsPreview';
 import { getCurrencySymbol, getCountryByCode } from '@/lib/countries';
 import { resolveScannedProduct } from '@/lib/scale-barcode';
-import { scannedVariantNeedsCustomizer } from '@/lib/product-variants';
+import { scannedVariantNeedsCustomizer, productNeedsCustomizer, activeVariants } from '@/lib/product-variants';
 import {
   buildAppendItemsFingerprint,
   clearAppendAttempt,
@@ -109,7 +109,7 @@ export default function POSPage() {
   const isRestaurant = (currentTenant?.business_type ?? 'restaurant') === 'restaurant';
   const cart = useCartStore();
   const heldOrders = useHeldOrdersStore();
-  const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled, cartTabInlineClose, cartTabsAllowMultipleEmpty, cartTabKeepOpenOnPlaceOrder } = usePosSettingsStore();
+  const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled, cartTabInlineClose, cartTabsAllowMultipleEmpty, cartTabKeepOpenOnPlaceOrder, quickAddEnabled } = usePosSettingsStore();
   const { open: leftSidebarOpen } = useSidebar();
   const t = useTranslations('pos');
   const tCommon = useTranslations('common');
@@ -581,6 +581,11 @@ export default function POSPage() {
   }, [isRestaurant, setBillingType, setTablesRequired, setKotPrintingEnabled]);
 
   const handleProductClick = (product: Product) => {
+    if (quickAddEnabled && !productNeedsCustomizer(product)) {
+      const variants = activeVariants(product.variants);
+      cart.addItem(product, 1, [], '', variants.length === 1 ? variants[0] : null);
+      return;
+    }
     // Always open modal so user can add notes and adjust quantity
     setAddonInitialVariant(null);
     setAddonProduct(product);

@@ -3223,6 +3223,16 @@ export default function SettingsPage() {
                   toast.success(v ? t('productImagesEnabled') : t('productImagesDisabled'), { id: 'pos-local' });
                 }} />
               </div>
+              <div className="flex items-center justify-between gap-4 pt-4 mt-4 border-t border-border">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground">{t('quickAddEnabled')}</p>
+                  <p className="text-sm text-muted-foreground">{t('quickAddEnabledHint')}</p>
+                </div>
+                <Toggle value={posSettings.quickAddEnabled} label={t('quickAddEnabled')} onChange={(v) => {
+                  posSettings.setQuickAddEnabled(v);
+                  toast.success(v ? t('quickAddEnabledEnabled') : t('quickAddEnabledDisabled'), { id: 'pos-local' });
+                }} />
+              </div>
             </div>
 
             {/* POS Workflow */}

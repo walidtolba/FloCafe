@@ -19,6 +19,13 @@ export function isVariantSoldOut(variant: ProductVariant): boolean {
   return Boolean(variant.track_inventory) && Number(variant.stock_quantity) <= 0;
 }
 
+function hasRequiredAddonSelection(product: { addon_groups?: AddonGroup[] }): boolean {
+  return (product.addon_groups || []).some((group) => {
+    const requiredMin = group.is_required ? Math.max(1, group.min_selection || 1) : (group.min_selection || 0);
+    return requiredMin > 0;
+  });
+}
+
 /**
  * Whether a scanned variant must pass through the customizer instead of the
  * cart: a required add-on group still needs a selection, and a sold-out
@@ -28,11 +35,22 @@ export function scannedVariantNeedsCustomizer(
   product: { addon_groups?: AddonGroup[] },
   variant: ProductVariant,
 ): boolean {
-  const needsRequiredSelection = (product.addon_groups || []).some((group) => {
-    const requiredMin = group.is_required ? Math.max(1, group.min_selection || 1) : (group.min_selection || 0);
-    return requiredMin > 0;
-  });
-  return needsRequiredSelection || isVariantSoldOut(variant);
+  return hasRequiredAddonSelection(product) || isVariantSoldOut(variant);
+}
+
+/**
+ * Whether a bare product tap (no variant chosen yet) must pass through the
+ * customizer: more than one sellable variant is an ambiguous choice, a
+ * required add-on group still needs a selection, and a single sold-out
+ * variant needs the picker rather than a sale that fails at checkout.
+ */
+export function productNeedsCustomizer(
+  product: { variants?: ProductVariant[] | null; addon_groups?: AddonGroup[] },
+): boolean {
+  const variants = activeVariants(product.variants);
+  if (variants.length > 1) return true;
+  if (hasRequiredAddonSelection(product)) return true;
+  return variants.length === 1 && isVariantSoldOut(variants[0]);
 }
 
 /** Active variants in display order. */
