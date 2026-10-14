@@ -683,6 +683,7 @@ const FIL_INTENTIONAL_IDENTICAL = new Set<string>([
   'settings.paymentMethodCard',
   'settings.paymentMethodCash',
   'pos.orderNumber',
+  'pos.orderTabLabel', // "Tab" is a standard loanword in Filipino UI
   'pos.orderTypeDelivery',
   'pos.orderTypeOnline',
   'pos.orderTypeSuffix_delivery',
@@ -915,6 +916,7 @@ const DE_INTENTIONAL_IDENTICAL = new Set<string>([
   'permissionMatrix.areas.system',
   'pos.addonPrice',
   'pos.loadingEllipsis',
+  'pos.orderTabLabel', // "Tab" is a standard loanword in German UI
   'pos.orderTypeOnline',
   'pos.tagBestseller',
   'pos.tagCount',
@@ -1313,6 +1315,7 @@ const ID_INTENTIONAL_IDENTICAL = new Set<string>([
   'common.appTitle', 'common.brandName', 'common.logoAlt', 'settings.revflo', 'setup.finedineLabel',
   'auth.email', 'auth.recoverPinLabel', 'kds.connectionPolling', 'kds.emptyColumn', 'kds.viewKanban',
   'nav.kds', 'nav.pos', 'nav.whatsapp', 'nav.heapLabel', 'nav.portLabel', 'nav.serverLabel',
+  'pos.orderTabLabel', // "Tab" is a standard loanword in Indonesian UI
   'pos.orderTypeOnline', 'printTest.escpos', 'printTest.item', 'printTest.paperWidth58',
   'printTest.paperWidth80', 'print.hsn', 'print.zReport.paymentCount', 'print.zReport.amount',
   'products.barcodeLabel', 'products.fieldBarcode', 'products.fieldSku', 'products.skuLabel',
@@ -1504,6 +1507,7 @@ const VI_INTENTIONAL_IDENTICAL = new Set<string>([
   'nav.whatsapp',
   'pos.addonPrice',
   'pos.loadingEllipsis',
+  'pos.orderTabLabel', // "Tab" is a standard loanword in Vietnamese UI
   'pos.tagCount',
   'pos.tagHalal',
   'pos.taxLine',

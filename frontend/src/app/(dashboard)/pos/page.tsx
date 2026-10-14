@@ -18,6 +18,7 @@ import {
 
 import ProductGrid from '@/components/pos/ProductGrid';
 import CartPanel from '@/components/pos/CartPanel';
+import CartTabStrip from '@/components/pos/CartTabStrip';
 import AddonModal from '@/components/pos/AddonModal';
 import CustomerSearch from '@/components/pos/CustomerSearch';
 import TablePickerModal from '@/components/pos/TablePickerModal';
@@ -127,6 +128,7 @@ export default function POSPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [holding, setHolding] = useState(false);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [showPrintMenuModal, setShowPrintMenuModal] = useState(false);
@@ -1121,10 +1123,23 @@ export default function POSPage() {
     }
   };
 
+  const handleCloseCartTab = async (tabId: string) => {
+    const tab = cart.cartTabs().find((t) => t.id === tabId);
+    if (tab && tab.itemCount > 0) {
+      const proceed = await confirm(t('closeOrderTabConfirmBody'), {
+        title: t('closeOrderTabConfirmTitle'),
+        confirmLabel: t('closeOrderTabConfirmButton'),
+      });
+      if (!proceed) return;
+    }
+    cart.closeCartTab(tabId);
+  };
+
   const cartPanelProps = {
     tables,
     currency,
     submitting,
+    onHoldingChange: setHolding,
     onPlaceOrder: handlePlaceOrder,
     onShowTablePicker: () => setShowTablePicker(true),
     onEditItem: setEditingCartItem,
@@ -1234,6 +1249,14 @@ export default function POSPage() {
         onShowPrintMenu={() => setShowPrintMenuModal(true)}
         fullscreen={fullscreen}
         onToggleFullscreen={toggleFullscreen}
+      />
+
+      <CartTabStrip
+        tabs={cart.cartTabs()}
+        disabled={anyModalOpen || submitting || holding}
+        onNew={cart.addCartTab}
+        onSwitch={cart.switchCartTab}
+        onClose={handleCloseCartTab}
       />
 
       {/* Main content area */}

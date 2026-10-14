@@ -1,11 +1,72 @@
 import { create } from 'zustand';
 import type { Customer, Product, Addon, CartItem, ProductVariant } from '@/lib/types';
 import { generateCartItemId, normalizeCartItems } from '@/lib/cart-identity';
-import { cartVariantUnitPrice } from '@/lib/cart-price';
+import { computeCartSubtotal } from '@/lib/cart-price';
 
 export { generateCartItemId, normalizeCartItems } from '@/lib/cart-identity';
 
 export type CartOrderType = 'dine_in' | 'takeaway' | 'delivery' | 'online';
+
+/** Everything a cart tab needs to park and later restore itself exactly. */
+interface CartTabSnapshot {
+  items: CartItem[];
+  orderType: CartOrderType;
+  tableId: string | null;
+  heldOrderId: string | null;
+  customerId: number | string | null;
+  customer: Customer | null;
+  customerSource: 'explicit' | 'reservation' | null;
+  guestCount: number;
+  deliveryAddress: string;
+  deliveryPhone: string;
+  expectedPaymentMethod: string;
+  expectedPaymentMethodId: number | null;
+  deliveryNote: string;
+  onlinePlatform: string;
+  externalOrderId: string;
+  orderNotes: string;
+  waivedChargeIds: Set<string>;
+  optedInChargeIds: Set<string>;
+}
+
+export interface CartTabSummary {
+  id: string;
+  number: number;
+  isActive: boolean;
+  itemCount: number;
+  subtotal: number;
+}
+
+function createBlankCartTabSnapshot(): CartTabSnapshot {
+  return {
+    items: [], tableId: null, heldOrderId: null, customerId: null, customer: null,
+    customerSource: null, guestCount: 1, orderType: 'dine_in', deliveryAddress: '',
+    deliveryPhone: '', expectedPaymentMethod: '', expectedPaymentMethodId: null,
+    deliveryNote: '', onlinePlatform: '', externalOrderId: '', orderNotes: '',
+    waivedChargeIds: new Set<string>(), optedInChargeIds: new Set<string>(),
+  };
+}
+
+function isBlankCartTabSnapshot(snapshot: CartTabSnapshot): boolean {
+  return snapshot.items.length === 0
+    && snapshot.tableId === null
+    && snapshot.customerId == null
+    && snapshot.orderNotes === ''
+    && snapshot.orderType === 'dine_in'
+    && snapshot.deliveryAddress === ''
+    && snapshot.deliveryPhone === ''
+    && snapshot.onlinePlatform === ''
+    && snapshot.externalOrderId === '';
+}
+
+let nextCartTabId = 1;
+function generateCartTabId(): string {
+  return `tab-${nextCartTabId++}`;
+}
+
+function omitKey<T>(record: Record<string, T>, key: string): Record<string, T> {
+  return Object.fromEntries(Object.entries(record).filter(([k]) => k !== key));
+}
 
 interface CartState {
   items: CartItem[];
@@ -26,6 +87,21 @@ interface CartState {
   onlinePlatform: string;
   externalOrderId: string;
   orderNotes: string;
+
+  /** The in-progress cart currently "parked" (not loaded into the live fields above). */
+  activeCartTabId: string;
+  cartTabOrder: string[];
+  parkedCartTabs: Record<string, CartTabSnapshot>;
+  cartTabNumbers: Record<string, number>;
+  nextCartTabNumber: number;
+  /** Park the live cart, start a fresh blank one, and make it active. No-op if the live cart is already blank. */
+  addCartTab: () => void;
+  /** Park the live cart and load a different (parked) tab as the live one. */
+  switchCartTab: (tabId: string) => void;
+  /** Discard a tab. If it's the active one, promotes the next remaining tab (or resets to blank if it's the last). */
+  closeCartTab: (tabId: string) => void;
+  /** All tabs (active + parked) in display order, for rendering a tab strip. */
+  cartTabs: () => CartTabSummary[];
 
   addItem: (product: Product, quantity?: number, addons?: Addon[], specialInstructions?: string, variant?: ProductVariant | null) => void;
   updateItemDetails: (cartItemId: string, quantity: number, addons: Addon[], specialInstructions: string, variant?: ProductVariant | null) => void;
@@ -67,6 +143,40 @@ interface CartState {
   itemCount: () => number;
 }
 
+function snapshotActiveCart(state: CartTabSnapshot): CartTabSnapshot {
+  return {
+    items: state.items,
+    orderType: state.orderType,
+    tableId: state.tableId,
+    heldOrderId: state.heldOrderId,
+    customerId: state.customerId,
+    customer: state.customer,
+    customerSource: state.customerSource,
+    guestCount: state.guestCount,
+    deliveryAddress: state.deliveryAddress,
+    deliveryPhone: state.deliveryPhone,
+    expectedPaymentMethod: state.expectedPaymentMethod,
+    expectedPaymentMethodId: state.expectedPaymentMethodId,
+    deliveryNote: state.deliveryNote,
+    onlinePlatform: state.onlinePlatform,
+    externalOrderId: state.externalOrderId,
+    orderNotes: state.orderNotes,
+    // Independent Sets: the live cart must not keep mutating a parked snapshot.
+    waivedChargeIds: new Set(state.waivedChargeIds),
+    optedInChargeIds: new Set(state.optedInChargeIds),
+  };
+}
+
+function applyCartTabSnapshot(snapshot: CartTabSnapshot): CartTabSnapshot {
+  return {
+    ...snapshot,
+    waivedChargeIds: new Set(snapshot.waivedChargeIds),
+    optedInChargeIds: new Set(snapshot.optedInChargeIds),
+  };
+}
+
+const initialCartTabId = generateCartTabId();
+
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   orderType: 'dine_in',
@@ -86,6 +196,99 @@ export const useCartStore = create<CartState>((set, get) => ({
   orderNotes: '',
   waivedChargeIds: new Set<string>(),
   optedInChargeIds: new Set<string>(),
+
+  activeCartTabId: initialCartTabId,
+  cartTabOrder: [initialCartTabId],
+  parkedCartTabs: {},
+  cartTabNumbers: { [initialCartTabId]: 1 },
+  nextCartTabNumber: 2,
+
+  addCartTab: () => {
+    const state = get();
+    const liveSnapshot = snapshotActiveCart(state);
+    if (isBlankCartTabSnapshot(liveSnapshot)) return;
+
+    const newId = generateCartTabId();
+    const newNumber = state.nextCartTabNumber;
+    set({
+      ...createBlankCartTabSnapshot(),
+      parkedCartTabs: { ...state.parkedCartTabs, [state.activeCartTabId]: liveSnapshot },
+      cartTabOrder: [...state.cartTabOrder, newId],
+      cartTabNumbers: { ...state.cartTabNumbers, [newId]: newNumber },
+      nextCartTabNumber: newNumber + 1,
+      activeCartTabId: newId,
+    });
+  },
+
+  switchCartTab: (tabId) => {
+    const state = get();
+    if (tabId === state.activeCartTabId) return;
+    const target = state.parkedCartTabs[tabId];
+    if (!target) return;
+
+    const liveSnapshot = snapshotActiveCart(state);
+    set({
+      ...applyCartTabSnapshot(target),
+      parkedCartTabs: { ...omitKey(state.parkedCartTabs, tabId), [state.activeCartTabId]: liveSnapshot },
+      activeCartTabId: tabId,
+    });
+  },
+
+  closeCartTab: (tabId) => {
+    const state = get();
+
+    if (tabId !== state.activeCartTabId) {
+      if (!(tabId in state.parkedCartTabs)) return;
+      set({
+        parkedCartTabs: omitKey(state.parkedCartTabs, tabId),
+        cartTabNumbers: omitKey(state.cartTabNumbers, tabId),
+        cartTabOrder: state.cartTabOrder.filter((id) => id !== tabId),
+      });
+      return;
+    }
+
+    const remainingOrder = state.cartTabOrder.filter((id) => id !== tabId);
+    const remainingNumbers = omitKey(state.cartTabNumbers, tabId);
+
+    if (remainingOrder.length === 0) {
+      set({ ...createBlankCartTabSnapshot(), cartTabOrder: [tabId], cartTabNumbers: state.cartTabNumbers });
+      return;
+    }
+
+    const nextActiveId = remainingOrder[0];
+    const nextActiveSnapshot = state.parkedCartTabs[nextActiveId] ?? createBlankCartTabSnapshot();
+    const remainingParked = omitKey(state.parkedCartTabs, nextActiveId);
+    set({
+      ...applyCartTabSnapshot(nextActiveSnapshot),
+      parkedCartTabs: remainingParked,
+      cartTabOrder: remainingOrder,
+      cartTabNumbers: remainingNumbers,
+      activeCartTabId: nextActiveId,
+    });
+  },
+
+  cartTabs: () => {
+    const state = get();
+    return state.cartTabOrder.map((id) => {
+      if (id === state.activeCartTabId) {
+        return {
+          id,
+          number: state.cartTabNumbers[id] ?? 1,
+          isActive: true,
+          itemCount: state.items.reduce((sum, item) => sum + item.quantity, 0),
+          subtotal: computeCartSubtotal(state.items, state.orderType, state.onlinePlatform),
+        };
+      }
+      const snapshot = state.parkedCartTabs[id] ?? createBlankCartTabSnapshot();
+      return {
+        id,
+        number: state.cartTabNumbers[id] ?? 1,
+        isActive: false,
+        itemCount: snapshot.items.reduce((sum, item) => sum + item.quantity, 0),
+        subtotal: computeCartSubtotal(snapshot.items, snapshot.orderType, snapshot.onlinePlatform),
+      };
+    });
+  },
 
   // Waivers are explicit state, never inferred from a zero amount: a waived
   // charge and a fee configured at 0 must stay distinguishable.
@@ -173,9 +376,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     });
   },
 
-  clearCart: () => {
-    set({ items: [], tableId: null, heldOrderId: null, customerId: null, customer: null, customerSource: null, guestCount: 1, orderType: 'dine_in', deliveryAddress: '', deliveryPhone: '', expectedPaymentMethod: '', expectedPaymentMethodId: null, deliveryNote: '', onlinePlatform: '', externalOrderId: '', orderNotes: '', waivedChargeIds: new Set<string>(), optedInChargeIds: new Set<string>() });
-  },
+  // Clearing the cart only ever means "I just consumed the active tab's
+  // content" (placed/paid/held/appended) — closeCartTab already does exactly
+  // that, promoting the next tab or resetting in place if it's the only one.
+  clearCart: () => get().closeCartTab(get().activeCartTabId),
 
   loadItems: (items, tableId, customerId, guestCount, orderNotes, heldOrderId, waivedChargeIds, optedInChargeIds) => {
     set({
@@ -222,13 +426,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   subtotal: () => {
     const state = get();
-    const onlinePlatformSelected = state.orderType === 'online' && state.onlinePlatform.trim().length > 0;
-    return state.items.reduce((sum, item) => {
-      const itemPrice = cartVariantUnitPrice(item, onlinePlatformSelected);
-      const itemQty = Number(item.quantity) || 1;
-      const addonTotal = (item.addons || []).reduce((a, addon) => a + (Number(addon.price) || 0) * (Number(addon.quantity) || 1), 0);
-      return sum + (itemPrice + addonTotal) * itemQty;
-    }, 0);
+    return computeCartSubtotal(state.items, state.orderType, state.onlinePlatform);
   },
 
   itemCount: () => {

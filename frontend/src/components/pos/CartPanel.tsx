@@ -28,6 +28,7 @@ interface Props {
   tables: Table[];
   currency: string;
   submitting: boolean;
+  onHoldingChange?: (holding: boolean) => void;
   onPlaceOrder: () => void;
   onShowTablePicker: () => void;
   onEditItem?: (item: CartItem) => void;
@@ -136,8 +137,12 @@ function ItemQuantityControl({
   );
 }
 
-export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder }: Props) {
+export default function CartPanel({ tables, submitting, onHoldingChange, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder }: Props) {
   const cart = useCartStore();
+  const [holding, setHolding] = useState(false);
+  useEffect(() => {
+    onHoldingChange?.(holding);
+  }, [holding, onHoldingChange]);
   const heldOrders = useHeldOrdersStore();
   const { currentTenant } = useAuthStore();
   const billingType = usePosSettingsStore((s) => s.billingType);
@@ -195,6 +200,7 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
       return;
     }
     const tableName = tables.find((t) => t.id === cart.tableId)?.name || cart.tableId;
+    setHolding(true);
     try {
       await heldOrders.holdOrder(
         cart.tableId,
@@ -209,6 +215,8 @@ export default function CartPanel({ tables, submitting, onPlaceOrder, onEditItem
       toast.success(t('orderHeldFor', { table: tableName }));
     } catch {
       toast.error(t('holdOrderFailed'));
+    } finally {
+      setHolding(false);
     }
   };
 
