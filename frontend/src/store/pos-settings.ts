@@ -17,6 +17,12 @@ export interface PosSettingsState {
   customerMandatory: boolean;
   // Auto-advances phone to name when typed digits form a valid number.
   enforcePhoneLength: boolean;
+  // Cart tabs: X on each chip (wider chip) vs. a single Cancel button for the active tab.
+  cartTabInlineClose: boolean;
+  // Allow opening another blank tab even while the current one is already empty.
+  cartTabsAllowMultipleEmpty: boolean;
+  // Keep a tab's slot (reset to blank) instead of closing it when its order is placed.
+  cartTabKeepOpenOnPlaceOrder: boolean;
   billingType: 'postpaid' | 'prepaid';
   tablesRequired: boolean;
   // UI language synced from tenant on auth load with browser default fallback.
@@ -64,6 +70,9 @@ export interface PosSettingsState {
   setShowProductImages: (show: boolean) => void;
   setCustomerMandatory: (mandatory: boolean) => void;
   setEnforcePhoneLength: (enabled: boolean) => void;
+  setCartTabInlineClose: (v: boolean) => void;
+  setCartTabsAllowMultipleEmpty: (v: boolean) => void;
+  setCartTabKeepOpenOnPlaceOrder: (v: boolean) => void;
   setLanguage: (lang: Language) => void;
   setPrinterPaperSize: (size: PaperSize) => void;
   setPrinterEnabled: (enabled: boolean) => void;
@@ -105,6 +114,9 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       showProductImages: true,
       customerMandatory: false,
       enforcePhoneLength: false,
+      cartTabInlineClose: true,
+      cartTabsAllowMultipleEmpty: false,
+      cartTabKeepOpenOnPlaceOrder: false,
       billingType: 'postpaid',
       tablesRequired: true,
       language: 'en',
@@ -149,6 +161,9 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       setShowProductImages: (show) => set({ showProductImages: show }),
       setCustomerMandatory: (mandatory) => set({ customerMandatory: mandatory }),
       setEnforcePhoneLength: (enabled) => set({ enforcePhoneLength: enabled }),
+      setCartTabInlineClose: (v) => set({ cartTabInlineClose: v }),
+      setCartTabsAllowMultipleEmpty: (v) => set({ cartTabsAllowMultipleEmpty: v }),
+      setCartTabKeepOpenOnPlaceOrder: (v) => set({ cartTabKeepOpenOnPlaceOrder: v }),
       setLanguage: (language) => set({ language }),
       setPrinterPaperSize: (size) => set({ printerPaperSize: size }),
       setPrinterEnabled: (enabled) => set({ printerEnabled: enabled }),

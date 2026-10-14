@@ -28,7 +28,9 @@ interface Props {
   tables: Table[];
   currency: string;
   submitting: boolean;
+  cartTabsBusy?: boolean;
   onHoldingChange?: (holding: boolean) => void;
+  onCancelActiveTab?: () => void;
   onPlaceOrder: () => void;
   onShowTablePicker: () => void;
   onEditItem?: (item: CartItem) => void;
@@ -137,8 +139,9 @@ function ItemQuantityControl({
   );
 }
 
-export default function CartPanel({ tables, submitting, onHoldingChange, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder }: Props) {
+export default function CartPanel({ tables, submitting, cartTabsBusy = false, onHoldingChange, onCancelActiveTab, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder }: Props) {
   const cart = useCartStore();
+  const cartTabInlineClose = usePosSettingsStore((s) => s.cartTabInlineClose);
   const [holding, setHolding] = useState(false);
   useEffect(() => {
     onHoldingChange?.(holding);
@@ -541,6 +544,16 @@ export default function CartPanel({ tables, submitting, onHoldingChange, onPlace
           </div>
         )}
         <div className="flex gap-2">
+          {!cartTabInlineClose && cart.cartTabs().length > 1 && (
+            <Button
+              variant="outline"
+              onClick={onCancelActiveTab}
+              disabled={cartTabsBusy || submitting || holding}
+              className="flex-1"
+            >
+              {t('cancelActiveTab')}
+            </Button>
+          )}
           {canHold && (
             <Button variant="outline" onClick={handleHold} className="flex-1">
               <Pause size={14} className="me-1" /> {t('holdButton')}

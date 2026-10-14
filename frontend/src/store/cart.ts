@@ -92,14 +92,14 @@ interface CartState {
   activeCartTabId: string;
   cartTabOrder: string[];
   parkedCartTabs: Record<string, CartTabSnapshot>;
-  cartTabNumbers: Record<string, number>;
-  nextCartTabNumber: number;
-  /** Park the live cart, start a fresh blank one, and make it active. No-op if the live cart is already blank. */
-  addCartTab: () => void;
+  /** Park the live cart, start a fresh blank one, and make it active. No-op if the live cart is already blank, unless allowBlank is set. */
+  addCartTab: (opts?: { allowBlank?: boolean }) => void;
   /** Park the live cart and load a different (parked) tab as the live one. */
   switchCartTab: (tabId: string) => void;
   /** Discard a tab. If it's the active one, promotes the next remaining tab (or resets to blank if it's the last). */
   closeCartTab: (tabId: string) => void;
+  /** Reset the active tab's content to blank in place, keeping its slot/position/number in the strip. */
+  resetActiveCartTab: () => void;
   /** All tabs (active + parked) in display order, for rendering a tab strip. */
   cartTabs: () => CartTabSummary[];
 
@@ -200,22 +200,16 @@ export const useCartStore = create<CartState>((set, get) => ({
   activeCartTabId: initialCartTabId,
   cartTabOrder: [initialCartTabId],
   parkedCartTabs: {},
-  cartTabNumbers: { [initialCartTabId]: 1 },
-  nextCartTabNumber: 2,
-
-  addCartTab: () => {
+  addCartTab: (opts) => {
     const state = get();
     const liveSnapshot = snapshotActiveCart(state);
-    if (isBlankCartTabSnapshot(liveSnapshot)) return;
+    if (!opts?.allowBlank && isBlankCartTabSnapshot(liveSnapshot)) return;
 
     const newId = generateCartTabId();
-    const newNumber = state.nextCartTabNumber;
     set({
       ...createBlankCartTabSnapshot(),
       parkedCartTabs: { ...state.parkedCartTabs, [state.activeCartTabId]: liveSnapshot },
       cartTabOrder: [...state.cartTabOrder, newId],
-      cartTabNumbers: { ...state.cartTabNumbers, [newId]: newNumber },
-      nextCartTabNumber: newNumber + 1,
       activeCartTabId: newId,
     });
   },
@@ -241,17 +235,15 @@ export const useCartStore = create<CartState>((set, get) => ({
       if (!(tabId in state.parkedCartTabs)) return;
       set({
         parkedCartTabs: omitKey(state.parkedCartTabs, tabId),
-        cartTabNumbers: omitKey(state.cartTabNumbers, tabId),
         cartTabOrder: state.cartTabOrder.filter((id) => id !== tabId),
       });
       return;
     }
 
     const remainingOrder = state.cartTabOrder.filter((id) => id !== tabId);
-    const remainingNumbers = omitKey(state.cartTabNumbers, tabId);
 
     if (remainingOrder.length === 0) {
-      set({ ...createBlankCartTabSnapshot(), cartTabOrder: [tabId], cartTabNumbers: state.cartTabNumbers });
+      set({ ...createBlankCartTabSnapshot(), cartTabOrder: [tabId] });
       return;
     }
 
@@ -262,18 +254,21 @@ export const useCartStore = create<CartState>((set, get) => ({
       ...applyCartTabSnapshot(nextActiveSnapshot),
       parkedCartTabs: remainingParked,
       cartTabOrder: remainingOrder,
-      cartTabNumbers: remainingNumbers,
       activeCartTabId: nextActiveId,
     });
   },
 
+  resetActiveCartTab: () => set(createBlankCartTabSnapshot()),
+
   cartTabs: () => {
     const state = get();
-    return state.cartTabOrder.map((id) => {
+    // Numbered by position, not a persistent id→number map: closing tabs
+    // always renumbers the rest back down, so numbering never drifts upward.
+    return state.cartTabOrder.map((id, index) => {
       if (id === state.activeCartTabId) {
         return {
           id,
-          number: state.cartTabNumbers[id] ?? 1,
+          number: index + 1,
           isActive: true,
           itemCount: state.items.reduce((sum, item) => sum + item.quantity, 0),
           subtotal: computeCartSubtotal(state.items, state.orderType, state.onlinePlatform),
@@ -282,7 +277,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       const snapshot = state.parkedCartTabs[id] ?? createBlankCartTabSnapshot();
       return {
         id,
-        number: state.cartTabNumbers[id] ?? 1,
+        number: index + 1,
         isActive: false,
         itemCount: snapshot.items.reduce((sum, item) => sum + item.quantity, 0),
         subtotal: computeCartSubtotal(snapshot.items, snapshot.orderType, snapshot.onlinePlatform),

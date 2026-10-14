@@ -109,7 +109,7 @@ export default function POSPage() {
   const isRestaurant = (currentTenant?.business_type ?? 'restaurant') === 'restaurant';
   const cart = useCartStore();
   const heldOrders = useHeldOrdersStore();
-  const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled } = usePosSettingsStore();
+  const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled, cartTabInlineClose, cartTabsAllowMultipleEmpty, cartTabKeepOpenOnPlaceOrder } = usePosSettingsStore();
   const { open: leftSidebarOpen } = useSidebar();
   const t = useTranslations('pos');
   const tCommon = useTranslations('common');
@@ -720,7 +720,7 @@ export default function POSPage() {
           console.error('Failed to clear held order after placing order', heldOrderError);
         }
       }
-      cart.clearCart();
+      finishActiveCartTab();
       setMobileCartOpen(false);
       await refreshTables();
 
@@ -933,7 +933,7 @@ export default function POSPage() {
           console.error('Failed to clear held order after payment', heldOrderError);
         }
       }
-      cart.clearCart();
+      finishActiveCartTab();
       clearPrepaidAttempt();
       setMobileCartOpen(false);
       await refreshTables();
@@ -1123,6 +1123,13 @@ export default function POSPage() {
     }
   };
 
+  // After an order is successfully placed: close its tab (default), or reset it
+  // to blank in place so its slot stays in the strip, per the cashier's setting.
+  const finishActiveCartTab = () => {
+    if (cartTabKeepOpenOnPlaceOrder) cart.resetActiveCartTab();
+    else cart.clearCart();
+  };
+
   const handleCloseCartTab = async (tabId: string) => {
     const tab = cart.cartTabs().find((t) => t.id === tabId);
     if (tab && tab.itemCount > 0) {
@@ -1139,7 +1146,9 @@ export default function POSPage() {
     tables,
     currency,
     submitting,
+    cartTabsBusy: anyModalOpen,
     onHoldingChange: setHolding,
+    onCancelActiveTab: () => handleCloseCartTab(cart.activeCartTabId),
     onPlaceOrder: handlePlaceOrder,
     onShowTablePicker: () => setShowTablePicker(true),
     onEditItem: setEditingCartItem,
@@ -1254,7 +1263,8 @@ export default function POSPage() {
       <CartTabStrip
         tabs={cart.cartTabs()}
         disabled={anyModalOpen || submitting || holding}
-        onNew={cart.addCartTab}
+        inlineClose={cartTabInlineClose}
+        onNew={() => cart.addCartTab({ allowBlank: cartTabsAllowMultipleEmpty })}
         onSwitch={cart.switchCartTab}
         onClose={handleCloseCartTab}
       />

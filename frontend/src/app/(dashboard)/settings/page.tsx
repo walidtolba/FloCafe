@@ -3253,6 +3253,36 @@ export default function SettingsPage() {
                     toast.success(v ? t('enforcePhoneLengthEnabled') : t('enforcePhoneLengthDisabled'), { id: 'pos-local' });
                   }} />
                 </div>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{t('cartTabInlineClose')}</p>
+                    <p className="text-sm text-muted-foreground">{t('cartTabInlineCloseHint')}</p>
+                  </div>
+                  <Toggle value={posSettings.cartTabInlineClose} label={t('cartTabInlineClose')} onChange={(v) => {
+                    posSettings.setCartTabInlineClose(v);
+                    toast.success(v ? t('cartTabInlineCloseEnabled') : t('cartTabInlineCloseDisabled'), { id: 'pos-local' });
+                  }} />
+                </div>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{t('cartTabsAllowMultipleEmpty')}</p>
+                    <p className="text-sm text-muted-foreground">{t('cartTabsAllowMultipleEmptyHint')}</p>
+                  </div>
+                  <Toggle value={posSettings.cartTabsAllowMultipleEmpty} label={t('cartTabsAllowMultipleEmpty')} onChange={(v) => {
+                    posSettings.setCartTabsAllowMultipleEmpty(v);
+                    toast.success(v ? t('cartTabsAllowMultipleEmptyEnabled') : t('cartTabsAllowMultipleEmptyDisabled'), { id: 'pos-local' });
+                  }} />
+                </div>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{t('cartTabKeepOpenOnPlaceOrder')}</p>
+                    <p className="text-sm text-muted-foreground">{t('cartTabKeepOpenOnPlaceOrderHint')}</p>
+                  </div>
+                  <Toggle value={posSettings.cartTabKeepOpenOnPlaceOrder} label={t('cartTabKeepOpenOnPlaceOrder')} onChange={(v) => {
+                    posSettings.setCartTabKeepOpenOnPlaceOrder(v);
+                    toast.success(v ? t('cartTabKeepOpenOnPlaceOrderEnabled') : t('cartTabKeepOpenOnPlaceOrderDisabled'), { id: 'pos-local' });
+                  }} />
+                </div>
               </div>
             </div>
 
