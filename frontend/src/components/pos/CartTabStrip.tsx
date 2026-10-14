@@ -17,11 +17,9 @@ interface Props {
 export default function CartTabStrip({ tabs, disabled, inlineClose, onNew, onSwitch, onClose }: Props) {
   const t = useTranslations('pos');
 
-  const showChips = tabs.length > 1;
-
   return (
     <div className="flex gap-2 overflow-x-auto px-4 py-2 border-b border-border dark:border-border">
-      {showChips && tabs.map((tab) => (
+      {tabs.map((tab) => (
         inlineClose ? (
           <div
             key={tab.id}
