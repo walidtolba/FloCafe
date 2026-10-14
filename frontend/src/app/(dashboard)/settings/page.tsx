@@ -3295,6 +3295,44 @@ export default function SettingsPage() {
                 )}
                 <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
                   <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{t('cartTabChipHeight')}</p>
+                    <p className="text-sm text-muted-foreground">{t('cartTabChipHeightHint')}</p>
+                  </div>
+                  <div className="flex items-center gap-2 w-40 shrink-0">
+                    <input
+                      type="range"
+                      min={32}
+                      max={64}
+                      step={2}
+                      value={posSettings.cartTabChipHeight}
+                      onChange={(e) => posSettings.setCartTabChipHeight(Number(e.target.value))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs tabular-nums text-muted-foreground w-12 text-end">{posSettings.cartTabChipHeight}px</span>
+                  </div>
+                </div>
+                {posSettings.cartTabInlineClose && (
+                  <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground">{t('cartTabCloseButtonSize')}</p>
+                      <p className="text-sm text-muted-foreground">{t('cartTabCloseButtonSizeHint')}</p>
+                    </div>
+                    <div className="flex items-center gap-2 w-40 shrink-0">
+                      <input
+                        type="range"
+                        min={18}
+                        max={40}
+                        step={2}
+                        value={posSettings.cartTabCloseButtonSize}
+                        onChange={(e) => posSettings.setCartTabCloseButtonSize(Number(e.target.value))}
+                        className="flex-1"
+                      />
+                      <span className="text-xs tabular-nums text-muted-foreground w-12 text-end">{posSettings.cartTabCloseButtonSize}px</span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">{t('cartTabsAllowMultipleEmpty')}</p>
                     <p className="text-sm text-muted-foreground">{t('cartTabsAllowMultipleEmptyHint')}</p>
                   </div>

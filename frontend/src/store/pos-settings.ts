@@ -27,6 +27,10 @@ export interface PosSettingsState {
   cartTabKeepOpenOnPlaceOrder: boolean;
   // Chip width (px) for cart tabs when cartTabInlineClose shows an X on each chip.
   cartTabChipWidth: number;
+  // Chip height (px) for cart tabs — fixed independently of the close button's size.
+  cartTabChipHeight: number;
+  // Diameter (px) of the circular close (X) button on each chip.
+  cartTabCloseButtonSize: number;
   billingType: 'postpaid' | 'prepaid';
   tablesRequired: boolean;
   // UI language synced from tenant on auth load with browser default fallback.
@@ -79,6 +83,8 @@ export interface PosSettingsState {
   setCartTabsAllowMultipleEmpty: (v: boolean) => void;
   setCartTabKeepOpenOnPlaceOrder: (v: boolean) => void;
   setCartTabChipWidth: (v: number) => void;
+  setCartTabChipHeight: (v: number) => void;
+  setCartTabCloseButtonSize: (v: number) => void;
   setLanguage: (lang: Language) => void;
   setPrinterPaperSize: (size: PaperSize) => void;
   setPrinterEnabled: (enabled: boolean) => void;
@@ -125,6 +131,8 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       cartTabsAllowMultipleEmpty: false,
       cartTabKeepOpenOnPlaceOrder: false,
       cartTabChipWidth: 208,
+      cartTabChipHeight: 40,
+      cartTabCloseButtonSize: 26,
       billingType: 'postpaid',
       tablesRequired: true,
       language: 'en',
@@ -174,6 +182,8 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       setCartTabsAllowMultipleEmpty: (v) => set({ cartTabsAllowMultipleEmpty: v }),
       setCartTabKeepOpenOnPlaceOrder: (v) => set({ cartTabKeepOpenOnPlaceOrder: v }),
       setCartTabChipWidth: (v) => set({ cartTabChipWidth: v }),
+      setCartTabChipHeight: (v) => set({ cartTabChipHeight: v }),
+      setCartTabCloseButtonSize: (v) => set({ cartTabCloseButtonSize: v }),
       setLanguage: (language) => set({ language }),
       setPrinterPaperSize: (size) => set({ printerPaperSize: size }),
       setPrinterEnabled: (enabled) => set({ printerEnabled: enabled }),

@@ -11,12 +11,16 @@ interface Props {
   inlineClose: boolean;
   /** Chip min-width in px, user-configurable (Settings > POS Workflow) when inlineClose is on. */
   chipWidth: number;
+  /** Chip height in px, user-configurable — fixed independently of closeButtonSize. */
+  chipHeight: number;
+  /** Diameter (px) of the circular close button, user-configurable, when inlineClose is on. */
+  closeButtonSize: number;
   onNew: () => void;
   onSwitch: (tabId: string) => void;
   onClose: (tabId: string) => void;
 }
 
-export default function CartTabStrip({ tabs, disabled, inlineClose, chipWidth, onNew, onSwitch, onClose }: Props) {
+export default function CartTabStrip({ tabs, disabled, inlineClose, chipWidth, chipHeight, closeButtonSize, onNew, onSwitch, onClose }: Props) {
   const t = useTranslations('pos');
 
   return (
@@ -25,8 +29,8 @@ export default function CartTabStrip({ tabs, disabled, inlineClose, chipWidth, o
         inlineClose ? (
           <div
             key={tab.id}
-            style={{ minWidth: chipWidth }}
-            className={`shrink-0 flex items-center justify-between gap-5 rounded-lg ps-7 pe-3 py-1.5 text-xs font-medium transition-colors ${
+            style={{ minWidth: chipWidth, height: chipHeight, minHeight: chipHeight }}
+            className={`shrink-0 flex items-center justify-between gap-5 rounded-lg ps-7 pe-3 font-medium transition-colors ${
               tab.isActive
                 ? 'bg-card text-brand shadow-sm border border-border'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -36,17 +40,18 @@ export default function CartTabStrip({ tabs, disabled, inlineClose, chipWidth, o
               type="button"
               onClick={() => onSwitch(tab.id)}
               disabled={disabled}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-base"
             >
               {t('orderTabLabel', { number: tab.number })}
-              {tab.itemCount > 0 && <span className="ms-1 tabular-nums">· {tab.itemCount}</span>}
+              {tab.itemCount > 0 && <span className="ms-1 tabular-nums text-sm">· {tab.itemCount}</span>}
             </button>
             <button
               type="button"
               onClick={() => onClose(tab.id)}
               disabled={disabled}
               aria-label={t('closeOrderTabAria', { number: tab.number })}
-              className="touch-target shrink-0 ms-auto rounded-full p-1.5 bg-red-500/15 text-red-600 hover:bg-red-500/25 hover:text-red-700 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 dark:hover:text-red-300"
+              style={{ width: closeButtonSize, height: closeButtonSize, minWidth: closeButtonSize, minHeight: closeButtonSize }}
+              className="touch-target shrink-0 ms-auto flex items-center justify-center rounded-full bg-red-500/15 text-red-600 hover:bg-red-500/25 hover:text-red-700 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 dark:hover:text-red-300"
             >
               <X size={13} />
             </button>
@@ -57,14 +62,15 @@ export default function CartTabStrip({ tabs, disabled, inlineClose, chipWidth, o
             type="button"
             onClick={() => onSwitch(tab.id)}
             disabled={disabled}
-            className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 text-xs font-medium transition-colors ${
+            style={{ height: chipHeight, minHeight: chipHeight }}
+            className={`shrink-0 whitespace-nowrap rounded-lg px-4 text-base font-medium transition-colors ${
               tab.isActive
                 ? 'bg-card text-brand shadow-sm border border-border'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('orderTabLabel', { number: tab.number })}
-            {tab.itemCount > 0 && <span className="ms-1 tabular-nums">· {tab.itemCount}</span>}
+            {tab.itemCount > 0 && <span className="ms-1 tabular-nums text-sm">· {tab.itemCount}</span>}
           </button>
         )
       ))}
