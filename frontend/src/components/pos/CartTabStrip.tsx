@@ -23,7 +23,7 @@ export default function CartTabStrip({ tabs, disabled, inlineClose, onNew, onSwi
         inlineClose ? (
           <div
             key={tab.id}
-            className={`shrink-0 flex items-center gap-3 rounded-lg ps-5 pe-3 py-1.5 min-w-28 text-xs font-medium transition-colors ${
+            className={`shrink-0 flex items-center gap-4 rounded-lg ps-6 pe-4 py-1.5 min-w-36 text-xs font-medium transition-colors ${
               tab.isActive
                 ? 'bg-card text-brand shadow-sm border border-border'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
