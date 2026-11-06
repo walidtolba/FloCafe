@@ -909,7 +909,9 @@
     "chargesTotal": "शुल्कों का योग",
     "chargeUpdateFailed": "शुल्क अपडेट नहीं हो सका",
     "tagHalal": "हलाल",
-    "partialPaymentConfirm": "अभी {amount} लें? {remaining} बाकी रहेगा।"
+    "partialPaymentConfirm": "अभी {amount} लें? {remaining} बाकी रहेगा।",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "राशि",
@@ -1286,7 +1288,10 @@
     "variantToggle": "इस उत्पाद में वेरिएंट हैं (जैसे: आकार, क्रस्ट, स्वाद)",
     "variantsSection": "वेरिएंट",
     "variantDeactivateConfirm": "सहेजने पर यह वेरिएंट निष्क्रिय हो जाएगा और इसे इस स्क्रीन से वापस नहीं लाया जा सकता।",
-    "variantRemoveAllConfirm": "इसे बंद करने पर इस उत्पाद के सभी वेरिएंट निष्क्रिय हो जाएँगे। पुराने ऑर्डर उन्हें बनाए रखेंगे।"
+    "variantRemoveAllConfirm": "इसे बंद करने पर इस उत्पाद के सभी वेरिएंट निष्क्रिय हो जाएँगे। पुराने ऑर्डर उन्हें बनाए रखेंगे।",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "रकम",

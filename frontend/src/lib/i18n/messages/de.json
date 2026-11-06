@@ -909,7 +909,9 @@
     "chargesTotal": "Gebühren gesamt",
     "chargeUpdateFailed": "Gebühr konnte nicht aktualisiert werden",
     "tagHalal": "Halal",
-    "partialPaymentConfirm": "{amount} jetzt einnehmen? {remaining} bleibt offen."
+    "partialPaymentConfirm": "{amount} jetzt einnehmen? {remaining} bleibt offen.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Betrag",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Dieses Produkt hat Varianten (z. B. Größe, Belag, Geschmack)",
     "variantsSection": "Varianten",
     "variantDeactivateConfirm": "Diese Variante wird beim Speichern deaktiviert und kann auf diesem Bildschirm nicht wiederhergestellt werden.",
-    "variantRemoveAllConfirm": "Wenn Sie dies abschalten, werden alle Varianten dieses Produkts deaktiviert. Frühere Bestellungen behalten sie."
+    "variantRemoveAllConfirm": "Wenn Sie dies abschalten, werden alle Varianten dieses Produkts deaktiviert. Frühere Bestellungen behalten sie.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Betrag",

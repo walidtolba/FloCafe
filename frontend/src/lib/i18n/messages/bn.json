@@ -909,7 +909,9 @@
     "chargesTotal": "মোট ফি",
     "chargeUpdateFailed": "ফি আপডেট করা যায়নি",
     "tagHalal": "হালাল",
-    "partialPaymentConfirm": "এখন {amount} নিন? {remaining} বাকি থাকবে।"
+    "partialPaymentConfirm": "এখন {amount} নিন? {remaining} বাকি থাকবে।",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "এএমটি",
@@ -1286,7 +1288,10 @@
     "variantToggle": "এই পণ্যের ভ্যারিয়েন্ট আছে (যেমন: সাইজ, ক্রাস্ট, ফ্লেভার)",
     "variantsSection": "ভ্যারিয়েন্ট",
     "variantDeactivateConfirm": "এই ভ্যারিয়েন্টটি সংরক্ষণের সময় নিষ্ক্রিয় হবে এবং এই স্ক্রিন থেকে ফিরিয়ে আনা যাবে না।",
-    "variantRemoveAllConfirm": "এটি বন্ধ করলে এই পণ্যের সব ভ্যারিয়েন্ট নিষ্ক্রিয় হয়ে যাবে। পুরোনো অর্ডারে সেগুলো থাকবে।"
+    "variantRemoveAllConfirm": "এটি বন্ধ করলে এই পণ্যের সব ভ্যারিয়েন্ট নিষ্ক্রিয় হয়ে যাবে। পুরোনো অর্ডারে সেগুলো থাকবে।",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "পরিমাণ",

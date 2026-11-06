@@ -909,7 +909,9 @@
     "chargesTotal": "Total das taxas",
     "chargeUpdateFailed": "Não foi possível atualizar a taxa",
     "tagHalal": "Halal",
-    "partialPaymentConfirm": "Receber {amount} agora? {remaining} continuará em aberto."
+    "partialPaymentConfirm": "Receber {amount} agora? {remaining} continuará em aberto.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Total",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Este produto tem variantes (ex.: tamanho, massa, sabor)",
     "variantsSection": "Variantes",
     "variantDeactivateConfirm": "Esta variante será desativada ao salvar e não poderá ser restaurada a partir desta tela.",
-    "variantRemoveAllConfirm": "Ao desligar, todas as variantes deste produto serão desativadas. Os pedidos anteriores as mantêm."
+    "variantRemoveAllConfirm": "Ao desligar, todas as variantes deste produto serão desativadas. Os pedidos anteriores as mantêm.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Valor",

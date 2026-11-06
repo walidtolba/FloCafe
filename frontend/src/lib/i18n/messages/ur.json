@@ -909,7 +909,9 @@
     "chargesTotal": "کل فیس",
     "chargeUpdateFailed": "فیس اپ ڈیٹ نہیں ہو سکی",
     "tagHalal": "حلال",
-    "partialPaymentConfirm": "ابھی {amount} وصول کریں؟ {remaining} واجب الادا رہے گا۔"
+    "partialPaymentConfirm": "ابھی {amount} وصول کریں؟ {remaining} واجب الادا رہے گا۔",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "رقم",
@@ -1286,7 +1288,10 @@
     "variantToggle": "اس پروڈکٹ کے وریئنٹ ہیں (مثلاً سائز، کرسٹ، ذائقہ)",
     "variantsSection": "اقسام",
     "variantDeactivateConfirm": "یہ وریئنٹ محفوظ کرنے پر غیر فعال ہو جائے گا اور اس اسکرین سے بحال نہیں کیا جا سکتا۔",
-    "variantRemoveAllConfirm": "اسے بند کرنے پر اس پروڈکٹ کے تمام وریئنٹ غیر فعال ہو جائیں گے۔ پرانے آرڈرز انہیں برقرار رکھتے ہیں۔"
+    "variantRemoveAllConfirm": "اسے بند کرنے پر اس پروڈکٹ کے تمام وریئنٹ غیر فعال ہو جائیں گے۔ پرانے آرڈرز انہیں برقرار رکھتے ہیں۔",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "رقم",

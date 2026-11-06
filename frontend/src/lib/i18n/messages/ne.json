@@ -909,7 +909,9 @@
     "chargesTotal": "कुल शुल्क",
     "chargeUpdateFailed": "शुल्क अद्यावधिक गर्न सकिएन",
     "tagHalal": "हलाल",
-    "partialPaymentConfirm": "अहिले {amount} लिनुहुन्छ? {remaining} बाँकी रहनेछ।"
+    "partialPaymentConfirm": "अहिले {amount} लिनुहुन्छ? {remaining} बाँकी रहनेछ।",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "रकम",
@@ -1286,7 +1288,10 @@
     "variantToggle": "यो उत्पादनमा भेरियन्टहरू छन् (जस्तै: आकार, क्रस्ट, स्वाद)",
     "variantsSection": "भेरिएन्टहरू",
     "variantDeactivateConfirm": "यो भेरियन्ट सेव गर्दा निष्क्रिय हुन्छ र यो स्क्रिनबाट पुनःस्थापना गर्न मिल्दैन।",
-    "variantRemoveAllConfirm": "यसलाई बन्द गर्दा यो उत्पादनका सबै भेरियन्टहरू निष्क्रिय हुन्छन्। पुराना अर्डरहरूमा तिनीहरू कायमै रहन्छन्।"
+    "variantRemoveAllConfirm": "यसलाई बन्द गर्दा यो उत्पादनका सबै भेरियन्टहरू निष्क्रिय हुन्छन्। पुराना अर्डरहरूमा तिनीहरू कायमै रहन्छन्।",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "रकम",

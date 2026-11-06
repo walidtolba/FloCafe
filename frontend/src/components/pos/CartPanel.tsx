@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import {
   ShoppingCart, UtensilsCrossed, Package, Truck, Globe,
   Plus, Minus, Trash2, Pause, MapPin, Phone, SquarePen,
-  Users, Wallet, StickyNote,
+  Wallet, StickyNote, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
@@ -16,7 +16,7 @@ import { useAuthStore } from '@/store/auth';
 import { usePosSettingsStore } from '@/store/pos-settings';
 import { useTranslations } from 'use-intl';
 import toast from 'react-hot-toast';
-import type { Table, Order, OrderItem, CartItem } from '@/lib/types';
+import type { Table, Order, OrderItem, CartItem, Addon, Product } from '@/lib/types';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 import { fractionalQuantityStep, roundToQuantityPrecision } from '@/lib/utils';
 import { cartVariantUnitPrice } from '@/lib/cart-price';
@@ -36,6 +36,7 @@ interface Props {
   onEditItem?: (item: CartItem) => void;
   variant?: 'sidebar' | 'drawer';
   existingOrder?: Order | null;
+  boxExtraProducts?: Product[];
 }
 
 const orderTypeIcons = {
@@ -139,10 +140,61 @@ function ItemQuantityControl({
   );
 }
 
-export default function CartPanel({ tables, submitting, cartTabsBusy = false, onHoldingChange, onCancelActiveTab, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder }: Props) {
+function chipExtras(item: CartItem): Addon[] {
+  return (item.product.addon_groups || [])
+    .filter((group) => !group.is_required)
+    .flatMap((group) => group.addons || [])
+    .filter((addon) => addon.is_active);
+}
+
+function ExtraChips({
+  item,
+  onToggle,
+}: {
+  item: CartItem;
+  onToggle: (cartItemId: string, addon: Addon) => void;
+}) {
+  const groups = (item.product.addon_groups || [])
+    .filter((group) => !group.is_required)
+    .map((group) => ({ group, addons: (group.addons || []).filter((addon) => addon.is_active) }))
+    .filter(({ addons }) => addons.length > 0);
+  if (groups.length === 0) return null;
+
+  return (
+    <div className="mt-2 space-y-1.5 border-t border-dashed border-border/70 pt-2">
+      {groups.map(({ group, addons }) => (
+        <div key={group.id} className="flex flex-wrap items-center gap-1.5">
+          <span className="me-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</span>
+          {addons.map((addon) => {
+            const selected = item.addons.some((a) => a.id === addon.id);
+            return (
+              <button
+                key={addon.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onToggle(item.id, addon)}
+                className={`inline-flex min-h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium transition-colors ${
+                  selected
+                    ? 'bg-brand text-white'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {selected ? <Check size={12} /> : <Plus size={12} />}
+                {addon.name}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function CartPanel({ tables, submitting, cartTabsBusy = false, onHoldingChange, onCancelActiveTab, onPlaceOrder, onEditItem, variant = 'sidebar', existingOrder, boxExtraProducts = [] }: Props) {
   const cart = useCartStore();
   const cartTabInlineClose = usePosSettingsStore((s) => s.cartTabInlineClose);
   const [holding, setHolding] = useState(false);
+  const [boxOpen, setBoxOpen] = useState(true);
   useEffect(() => {
     onHoldingChange?.(holding);
   }, [holding, onHoldingChange]);
@@ -224,6 +276,18 @@ export default function CartPanel({ tables, submitting, cartTabsBusy = false, on
   };
 
   const isDrawer = variant === 'drawer';
+  const boxIds = new Set(boxExtraProducts.map((p) => p.id));
+  const mealItems = cart.items.filter((item) => !boxIds.has(item.product.id));
+  const hasBoxExtras = mealItems.length > 0 && boxExtraProducts.length > 0;
+  const showBox = boxOpen && hasBoxExtras;
+  const boxCount = (product: Product) =>
+    cart.items.filter((item) => item.product.id === product.id).reduce((sum, item) => sum + item.quantity, 0);
+  const boxTotal = boxExtraProducts.reduce((sum, p) => sum + boxCount(p), 0);
+  const changeBox = (product: Product, delta: 1 | -1) => {
+    const line = cart.items.find((item) => item.product.id === product.id);
+    if (delta === 1) cart.addItem(product, 1);
+    else if (line) cart.updateQuantity(line.id, line.quantity - 1);
+  };
 
   return (
     <div
@@ -258,17 +322,6 @@ export default function CartPanel({ tables, submitting, cartTabsBusy = false, on
               );
             })}
         </div>
-
-        {cart.orderType === 'dine_in' && (
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users size={15} /><span>{t('pax')}</span></div>
-            <div className="flex items-center gap-2">
-              <button type="button" aria-label={t('decreasePax')} onClick={() => cart.setGuestCount(Math.max(1, cart.guestCount - 1))} className="touch-target rounded-full bg-muted"><Minus size={15} /></button>
-              <input aria-label={t('pax')} inputMode="numeric" type="number" min="1" max="99" value={cart.guestCount} onChange={(e) => cart.setGuestCount(Math.min(99, Math.max(1, Number(e.target.value) || 1)))} className="w-12 text-center text-base font-semibold border-0 outline-none bg-transparent" />
-              <button type="button" aria-label={t('increasePax')} onClick={() => cart.setGuestCount(Math.min(99, cart.guestCount + 1))} className="touch-target rounded-full bg-muted"><Plus size={15} /></button>
-            </div>
-          </div>
-        )}
 
         {/* Delivery address and phone — shown inline when delivery is selected */}
         {cart.orderType === 'delivery' && (
@@ -399,14 +452,14 @@ export default function CartPanel({ tables, submitting, cartTabsBusy = false, on
           </div>
         )}
 
-        {cart.items.length === 0 ? (
+        {mealItems.length === 0 ? (
           <div className={`flex flex-col items-center justify-center text-muted-foreground ${existingOrder ? 'py-4' : isDrawer ? 'py-8' : 'h-full'}`}>
             <ShoppingCart size={existingOrder ? 24 : 40} />
             <p className="mt-2 text-sm">{existingOrder ? t('addNewItemsAbove') : t('cartEmpty')}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {cart.items.map((item) => (
+            {mealItems.map((item) => (
               <div key={item.id} className="border-b border-border/60 pb-3 last:border-b-0 last:pb-0">
                 <div className="flex items-start gap-2">
                   <p className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-foreground">
@@ -423,9 +476,9 @@ export default function CartPanel({ tables, submitting, cartTabsBusy = false, on
                   </button>
                 </div>
                 <div className="min-w-0">
-                  {item.addons.length > 0 && (
+                  {item.addons.some((a) => !chipExtras(item).some((c) => c.id === a.id)) && (
                     <div className="mt-0.5">
-                      {item.addons.map((a) => (
+                      {item.addons.filter((a) => !chipExtras(item).some((c) => c.id === a.id)).map((a) => (
                         <p key={a.id} className="break-words text-xs text-muted-foreground">
                           + {a.name}{(a.quantity || 1) > 1 ? ` ×${a.quantity}` : ''} {Number(a.price) > 0 && `(${fmt(Number(a.price) * (a.quantity || 1))})`}
                         </p>
@@ -453,6 +506,7 @@ export default function CartPanel({ tables, submitting, cartTabsBusy = false, on
                     <ItemQuantityControl item={item} updateQuantity={cart.updateQuantity} />
                   </div>
                 </div>
+                <ExtraChips item={item} onToggle={cart.toggleItemAddon} />
               </div>
             ))}
           </div>
@@ -460,26 +514,75 @@ export default function CartPanel({ tables, submitting, cartTabsBusy = false, on
       </div>
 
       {/* Cart Footer */}
-      <div data-testid="cart-footer" className="p-4 border-t border-border dark:border-border">
-        {/* Order Notes */}
+      <div data-testid="cart-footer" className="p-3 border-t border-border dark:border-border">
         {cart.items.length > 0 && (
-          <div className="mb-3">
-            <textarea
-              value={cart.orderNotes}
-              onChange={(e) => cart.setOrderNotes(e.target.value.slice(0, 200))}
-              placeholder={t('orderNotesPlaceholder')}
-              rows={2}
-              maxLength={200}
-              className="w-full min-h-20 px-3 py-2 text-sm border border-border bg-card rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
-            />
-            <p className="text-xs text-muted-foreground text-end mt-0.5">{cart.orderNotes.length}/200</p>
+          <div className="mb-2">
+            {hasBoxExtras && (
+              <div role="tablist" data-testid="cart-box-extras" className="mb-1.5 flex gap-1 rounded-lg bg-muted p-0.5">
+                {([['note', t('orderNotesTab')], ['box', t('boxExtras')]] as const).map(([key, label]) => {
+                  const active = (key === 'box') === showBox;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setBoxOpen(key === 'box')}
+                      className={`flex min-h-8 flex-1 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
+                        active ? 'bg-card text-brand shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {label}
+                      {key === 'box' && boxTotal > 0 && (
+                        <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] leading-none text-white">{boxTotal}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className="grid">
+              <div
+                className={`col-start-1 row-start-1 transition-opacity duration-200 ${showBox ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+                aria-hidden={showBox}
+                inert={showBox}
+              >
+                <textarea
+                  value={cart.orderNotes}
+                  onChange={(e) => cart.setOrderNotes(e.target.value.slice(0, 200))}
+                  placeholder={t('orderNotesPlaceholder')}
+                  rows={1}
+                  maxLength={200}
+                  title={`${cart.orderNotes.length}/200`}
+                  className="w-full min-h-11 px-3 py-2 text-sm border border-border bg-card rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                />
+              </div>
+              {hasBoxExtras && (
+                <div
+                  className={`col-start-1 row-start-1 grid grid-cols-2 content-start gap-1.5 transition-opacity duration-200 ${showBox ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                  aria-hidden={!showBox}
+                  inert={!showBox}
+                >
+                  {boxExtraProducts.map((product) => (
+                    <div key={product.id} className="flex flex-col items-center rounded-lg bg-muted/60 px-2 py-1">
+                      <span className="w-full truncate text-center text-xs font-medium">{product.name.replace(/\s*\(box\)$/i, '')}</span>
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <button type="button" onClick={() => changeBox(product, -1)} disabled={boxCount(product) === 0} className="flex h-8 w-8 items-center justify-center rounded-full bg-card disabled:opacity-40" aria-label={t('remove')}><Minus size={14} /></button>
+                        <span className="w-5 text-center text-sm font-semibold tabular-nums">{boxCount(product)}</span>
+                        <button type="button" onClick={() => changeBox(product, 1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-card" aria-label={t('addItems')}><Plus size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
-        <div className="flex justify-between mb-1 text-sm">
+        <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t('items')}</span>
           <span className="font-medium">{cart.itemCount()}</span>
         </div>
-        <div className="flex justify-between mb-4 text-lg">
+        <div className="flex justify-between mb-2 text-lg">
           <span className="font-semibold text-foreground">{t('subtotal')}</span>
           <span className="font-bold text-brand">
             {fmt(cart.subtotal())}

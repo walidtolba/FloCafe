@@ -909,7 +909,9 @@
     "chargesTotal": "Total biaya",
     "chargeUpdateFailed": "Biaya tidak dapat diperbarui",
     "tagHalal": "Halal",
-    "partialPaymentConfirm": "Tagih {amount} sekarang? {remaining} tetap terutang."
+    "partialPaymentConfirm": "Tagih {amount} sekarang? {remaining} tetap terutang.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Jml",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Produk ini memiliki varian (mis. Ukuran, Adonan, Rasa)",
     "variantsSection": "Varian",
     "variantDeactivateConfirm": "Varian ini akan dinonaktifkan saat disimpan dan tidak dapat dipulihkan dari layar ini.",
-    "variantRemoveAllConfirm": "Mematikannya akan menonaktifkan semua varian produk ini. Pesanan lama tetap menyimpannya."
+    "variantRemoveAllConfirm": "Mematikannya akan menonaktifkan semua varian produk ini. Pesanan lama tetap menyimpannya.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Jumlah",

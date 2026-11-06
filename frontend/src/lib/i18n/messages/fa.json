@@ -909,7 +909,9 @@
     "chargesTotal": "جمع کل هزینه‌ها",
     "chargeUpdateFailed": "به‌روزرسانی هزینه ممکن نشد",
     "tagHalal": "حلال",
-    "partialPaymentConfirm": "اکنون {amount} دریافت شود؟ {remaining} همچنان بدهی می‌ماند."
+    "partialPaymentConfirm": "اکنون {amount} دریافت شود؟ {remaining} همچنان بدهی می‌ماند.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "مبلغ",
@@ -1286,7 +1288,10 @@
     "variantToggle": "این محصول گزینه‌هایی دارد (مانند: اندازه، خمیر، طعم)",
     "variantsSection": "گونه‌ها",
     "variantDeactivateConfirm": "این گزینه هنگام ذخیره غیرفعال می‌شود و از این صفحه قابل بازگردانی نیست.",
-    "variantRemoveAllConfirm": "با خاموش کردن این، همه گزینه‌های این محصول غیرفعال می‌شوند. سفارش‌های قبلی آن‌ها را نگه می‌دارند."
+    "variantRemoveAllConfirm": "با خاموش کردن این، همه گزینه‌های این محصول غیرفعال می‌شوند. سفارش‌های قبلی آن‌ها را نگه می‌دارند.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "مبلغ",

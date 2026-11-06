@@ -909,7 +909,9 @@
     "chargesTotal": "料金合計",
     "chargeUpdateFailed": "料金を更新できませんでした",
     "tagHalal": "ハラール",
-    "partialPaymentConfirm": "今すぐ {amount} を徴収しますか？{remaining} は未払いのままです。"
+    "partialPaymentConfirm": "今すぐ {amount} を徴収しますか？{remaining} は未払いのままです。",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "金額",
@@ -1286,7 +1288,10 @@
     "variantToggle": "この商品にはバリアントがあります（例：サイズ、生地、フレーバー）",
     "variantsSection": "バリエーション",
     "variantDeactivateConfirm": "保存するとこのバリアントは無効になり、この画面から復元できません。",
-    "variantRemoveAllConfirm": "オフにするとこの商品のすべてのバリアントが無効になります。過去の注文には残ります。"
+    "variantRemoveAllConfirm": "オフにするとこの商品のすべてのバリアントが無効になります。過去の注文には残ります。",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "金額",

@@ -105,6 +105,8 @@ interface CartState {
 
   addItem: (product: Product, quantity?: number, addons?: Addon[], specialInstructions?: string, variant?: ProductVariant | null) => void;
   updateItemDetails: (cartItemId: string, quantity: number, addons: Addon[], specialInstructions: string, variant?: ProductVariant | null) => void;
+  /** Toggles one add-on on a single unit of the line, splitting that unit off when the line holds several. */
+  toggleItemAddon: (cartItemId: string, addon: Addon) => void;
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -353,6 +355,21 @@ export const useCartStore = create<CartState>((set, get) => ({
         ),
       });
     }
+  },
+
+  toggleItemAddon: (cartItemId, addon) => {
+    const target = get().items.find((i) => i.id === cartItemId);
+    if (!target) return;
+    const addons = target.addons.some((a) => a.id === addon.id)
+      ? target.addons.filter((a) => a.id !== addon.id)
+      : [...target.addons, { ...addon, quantity: 1 }];
+
+    if (target.quantity > 1 && Number.isInteger(target.quantity)) {
+      get().updateQuantity(cartItemId, target.quantity - 1);
+      get().addItem(target.product, 1, addons, target.special_instructions, target.variant ?? null);
+      return;
+    }
+    get().updateItemDetails(cartItemId, target.quantity, addons, target.special_instructions);
   },
 
   removeItem: (cartItemId) => {

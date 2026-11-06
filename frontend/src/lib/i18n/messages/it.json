@@ -909,7 +909,9 @@
     "chargesTotal": "Totale spese",
     "chargeUpdateFailed": "Impossibile aggiornare la spesa",
     "tagHalal": "Halal",
-    "partialPaymentConfirm": "Incassare {amount} ora? {remaining} resterà dovuto."
+    "partialPaymentConfirm": "Incassare {amount} ora? {remaining} resterà dovuto.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Importo",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Questo prodotto ha varianti (es. formato, impasto, gusto)",
     "variantsSection": "Varianti",
     "variantDeactivateConfirm": "Questa variante verrà disattivata al salvataggio e non potrà essere ripristinata da questa schermata.",
-    "variantRemoveAllConfirm": "Disattivandolo verranno disattivate tutte le varianti di questo prodotto. Gli ordini passati le conservano."
+    "variantRemoveAllConfirm": "Disattivandolo verranno disattivate tutte le varianti di questo prodotto. Gli ordini passati le conservano.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Importo",

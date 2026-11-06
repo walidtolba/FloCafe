@@ -909,7 +909,9 @@
     "chargesTotal": "Итого сборы",
     "chargeUpdateFailed": "Не удалось обновить сбор",
     "tagHalal": "Халяль",
-    "partialPaymentConfirm": "Принять {amount} сейчас? {remaining} останется к оплате."
+    "partialPaymentConfirm": "Принять {amount} сейчас? {remaining} останется к оплате.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Сумма",
@@ -1286,7 +1288,10 @@
     "variantToggle": "У этого товара есть варианты (например, размер, начинка, вкус)",
     "variantsSection": "Варианты",
     "variantDeactivateConfirm": "Этот вариант будет отключён при сохранении, и восстановить его с этого экрана нельзя.",
-    "variantRemoveAllConfirm": "Если выключить, будут отключены все варианты этого товара. В прежних заказах они сохранятся."
+    "variantRemoveAllConfirm": "Если выключить, будут отключены все варианты этого товара. В прежних заказах они сохранятся.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Сумма",

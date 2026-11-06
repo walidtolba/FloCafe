@@ -1147,8 +1147,12 @@ export default function POSPage() {
     cart.closeCartTab(tabId);
   };
 
+  const boxCategoryId = categories.find((c) => c.slug === 'box-extras')?.id;
+  const boxExtraProducts = boxCategoryId ? products.filter((p) => p.category_id === boxCategoryId) : [];
+
   const cartPanelProps = {
     tables,
+    boxExtraProducts,
     currency,
     submitting,
     cartTabsBusy: anyModalOpen,

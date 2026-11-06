@@ -909,7 +909,9 @@
     "chargesTotal": "Totali i ngarkesave",
     "chargeUpdateFailed": "Nuk mund të përditësohej ngarkesa",
     "tagHalal": "Halal",
-    "partialPaymentConfirm": "Të arkëtohet {amount} tani? {remaining} do të mbetet e papaguar."
+    "partialPaymentConfirm": "Të arkëtohet {amount} tani? {remaining} do të mbetet e papaguar.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Shuma",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Ky produkt ka variante (p.sh. madhësi, kore, shije)",
     "variantsSection": "Variantet",
     "variantDeactivateConfirm": "Ky variant do të çaktivizohet kur ruhet dhe nuk mund të rikthehet nga ky ekran.",
-    "variantRemoveAllConfirm": "Nëse e çaktivizoni, do të çaktivizohen të gjitha variantet e këtij produkti. Porositë e vjetra i ruajnë."
+    "variantRemoveAllConfirm": "Nëse e çaktivizoni, do të çaktivizohen të gjitha variantet e këtij produkti. Porositë e vjetra i ruajnë.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Shuma",

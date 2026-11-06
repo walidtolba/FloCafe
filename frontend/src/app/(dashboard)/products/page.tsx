@@ -131,6 +131,7 @@ export default function ProductsPage() {
   const editRequestId = useRef(0);
   const [addonForm, setAddonForm] = useState({ name: '', description: '', is_required: false, allow_multiple_quantities: false, min_selection: 0, max_selection: 10 });
   const [showAddonModal, setShowAddonModal] = useState(false);
+  const [groupCategoryIds, setGroupCategoryIds] = useState<string[]>([]);
 
   const [addonList, setAddonList] = useState<AddonEditorRow[]>([]);
   const [form, setForm] = useState({
@@ -599,10 +600,12 @@ export default function ProductsPage() {
     setEditingAddonGroup(null);
     setShowAddonModal(false);
     setAddonList([]);
+    setGroupCategoryIds([]);
   };
 
   const openEditAddonGroup = (group: AddonGroup) => {
     setEditingAddonGroup(group);
+    setGroupCategoryIds(categories.filter((cat) => (cat.addon_group_ids || []).includes(group.id)).map((cat) => cat.id));
     setAddonForm({ name: group.name, description: group.description || '', is_required: Boolean(group.is_required), allow_multiple_quantities: Boolean(group.allow_multiple_quantities), min_selection: group.min_selection, max_selection: group.max_selection });
     setAddonList(group.addons?.map((a) => ({
       id: a.id,
@@ -639,13 +642,27 @@ export default function ProductsPage() {
           ...(addon.stock_edited ? { stock_quantity: Math.max(0, Number(addon.stock_quantity) || 0) } : {}),
         })),
       };
+      let groupId: string;
       if (editingAddonGroup) {
         await api.put(`/addon-groups/${editingAddonGroup.id}`, payload);
+        groupId = String(editingAddonGroup.id);
         toast.success(t('addonGroupUpdated'));
       } else {
-        await api.post('/addon-groups', payload);
+        const response = await api.post('/addon-groups', payload);
+        groupId = String(response.data.addon_group.id);
         toast.success(t('addonGroupCreated'));
       }
+      const selected = new Set(groupCategoryIds);
+      const changed = categories.filter((cat) => {
+        const linked = (cat.addon_group_ids || []).includes(groupId);
+        return linked !== selected.has(cat.id);
+      });
+      await Promise.all(changed.map((cat) => {
+        const others = (cat.addon_group_ids || []).filter((id) => id !== groupId);
+        return api.put(`/categories/${cat.id}`, {
+          addon_group_ids: selected.has(cat.id) ? [...others, groupId] : others,
+        });
+      }));
       resetAddonForm();
       fetchData();
     } catch { toast.error(t('failedToSaveAddonGroup')); }
@@ -1563,6 +1580,31 @@ export default function ProductsPage() {
                     <input type="checkbox" checked={addonForm.allow_multiple_quantities} onChange={(e) => setAddonForm({ ...addonForm, allow_multiple_quantities: e.target.checked })} className="rounded border-gray-300 dark:border-border text-brand focus:ring-brand" />
                     <span className="text-sm text-foreground">{t('addonAllowMultipleQuantities')}</span>
                   </label>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-foreground">{t('addonAppliesToCategories')}</label>
+                      <div className="flex gap-3 text-xs">
+                        <button type="button" onClick={() => setGroupCategoryIds(categories.map((cat) => cat.id))} className="text-brand hover:underline">{t('selectAll')}</button>
+                        <button type="button" onClick={() => setGroupCategoryIds([])} className="text-muted-foreground hover:underline">{t('clearAll')}</button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((cat) => {
+                        const checked = groupCategoryIds.includes(cat.id);
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            aria-pressed={checked}
+                            onClick={() => setGroupCategoryIds(checked ? groupCategoryIds.filter((id) => id !== cat.id) : [...groupCategoryIds, cat.id])}
+                            className={`min-h-9 rounded-full border px-3 text-sm transition-colors ${checked ? 'border-brand bg-brand/10 text-brand' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                          >
+                            {cat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-sm font-medium text-foreground">{t('addonAddons')}</label>

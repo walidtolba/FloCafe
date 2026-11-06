@@ -909,7 +909,9 @@
     "chargesTotal": "Toplam ücretler",
     "chargeUpdateFailed": "Ücret güncellenemedi",
     "tagHalal": "Helal",
-    "partialPaymentConfirm": "Şimdi {amount} tahsil edilsin mi? {remaining} borç olarak kalacak."
+    "partialPaymentConfirm": "Şimdi {amount} tahsil edilsin mi? {remaining} borç olarak kalacak.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Tutar",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Bu ürünün varyantları var (örn. Boyut, Hamur, Tat)",
     "variantsSection": "Varyantlar",
     "variantDeactivateConfirm": "Bu varyant kaydedildiğinde devre dışı bırakılır ve bu ekrandan geri alınamaz.",
-    "variantRemoveAllConfirm": "Bunu kapatırsanız bu ürünün tüm varyantları devre dışı bırakılır. Eski siparişler korunur."
+    "variantRemoveAllConfirm": "Bunu kapatırsanız bu ürünün tüm varyantları devre dışı bırakılır. Eski siparişler korunur.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Tutar",

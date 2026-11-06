@@ -909,7 +909,9 @@
     "chargesTotal": "Totaal kosten",
     "chargeUpdateFailed": "Kosten konden niet worden bijgewerkt",
     "tagHalal": "Halal",
-    "partialPaymentConfirm": "{amount} nu innen? {remaining} blijft verschuldigd."
+    "partialPaymentConfirm": "{amount} nu innen? {remaining} blijft verschuldigd.",
+    "boxExtras": "Box extras",
+    "orderNotesTab": "Note"
   },
   "printTest": {
     "amt": "Bedrag",
@@ -1286,7 +1288,10 @@
     "variantToggle": "Dit product heeft varianten (bijv. formaat, korst, smaak)",
     "variantsSection": "Varianten",
     "variantDeactivateConfirm": "Deze variant wordt bij opslaan gedeactiveerd en kan vanaf dit scherm niet worden hersteld.",
-    "variantRemoveAllConfirm": "Als u dit uitschakelt, worden alle varianten van dit product gedeactiveerd. Eerdere bestellingen behouden ze."
+    "variantRemoveAllConfirm": "Als u dit uitschakelt, worden alle varianten van dit product gedeactiveerd. Eerdere bestellingen behouden ze.",
+    "addonAppliesToCategories": "Available in categories",
+    "selectAll": "Select all",
+    "clearAll": "Clear"
   },
   "receipt": {
     "amount": "Bedrag",
