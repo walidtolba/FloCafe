@@ -913,8 +913,8 @@
     "chargeUpdateFailed": "Gebühr konnte nicht aktualisiert werden",
     "tagHalal": "Halal",
     "partialPaymentConfirm": "{amount} jetzt einnehmen? {remaining} bleibt offen.",
-    "boxExtras": "Box extras",
-    "orderNotesTab": "Note"
+    "boxExtras": "Box-Extras",
+    "orderNotesTab": "Notiz"
   },
   "printTest": {
     "amt": "Betrag",
@@ -1292,9 +1292,9 @@
     "variantsSection": "Varianten",
     "variantDeactivateConfirm": "Diese Variante wird beim Speichern deaktiviert und kann auf diesem Bildschirm nicht wiederhergestellt werden.",
     "variantRemoveAllConfirm": "Wenn Sie dies abschalten, werden alle Varianten dieses Produkts deaktiviert. Frühere Bestellungen behalten sie.",
-    "addonAppliesToCategories": "Available in categories",
-    "selectAll": "Select all",
-    "clearAll": "Clear"
+    "addonAppliesToCategories": "In Kategorien verfügbar",
+    "selectAll": "Alle auswählen",
+    "clearAll": "Leeren"
   },
   "receipt": {
     "amount": "Betrag",
@@ -3063,7 +3063,7 @@
     "newVsPrevious": "Neu ggü. Vorperiode",
     "trendTitle": "Umsatz, Kosten und Gewinn",
     "noData": "Keine Verkäufe in diesem Zeitraum.",
-    "highlights": "Highlights",
+    "highlights": "Höhepunkte",
     "bestPeriod": "Beste Periode",
     "worstPeriod": "Schwächste Periode",
     "orders": "Bestellungen",

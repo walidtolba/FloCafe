@@ -913,8 +913,8 @@
     "chargeUpdateFailed": "تعذر تحديث الرسم",
     "tagHalal": "حلال",
     "partialPaymentConfirm": "تحصيل {amount} الآن؟ سيظل {remaining} مستحقًا.",
-    "boxExtras": "Box extras",
-    "orderNotesTab": "Note"
+    "boxExtras": "إضافات العلبة",
+    "orderNotesTab": "ملاحظة"
   },
   "printTest": {
     "amt": "المبلغ",
@@ -1292,9 +1292,9 @@
     "variantsSection": "المتغيرات",
     "variantDeactivateConfirm": "سيتم تعطيل هذا الخيار عند الحفظ ولا يمكن استعادته من هذه الشاشة.",
     "variantRemoveAllConfirm": "سيؤدي إيقاف هذا إلى تعطيل جميع خيارات المنتج. تحتفظ الطلبات السابقة بها.",
-    "addonAppliesToCategories": "Available in categories",
-    "selectAll": "Select all",
-    "clearAll": "Clear"
+    "addonAppliesToCategories": "متاح في الفئات",
+    "selectAll": "تحديد الكل",
+    "clearAll": "مسح"
   },
   "receipt": {
     "amount": "المبلغ",

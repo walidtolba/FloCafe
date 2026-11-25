@@ -913,8 +913,8 @@
     "chargeUpdateFailed": "No se pudo actualizar el cargo",
     "tagHalal": "Halal",
     "partialPaymentConfirm": "¿Cobrar {amount} ahora? {remaining} seguirá pendiente.",
-    "boxExtras": "Box extras",
-    "orderNotesTab": "Note"
+    "boxExtras": "Extras de caja",
+    "orderNotesTab": "Nota"
   },
   "printTest": {
     "amt": "Total",
@@ -1292,9 +1292,9 @@
     "variantsSection": "Variantes",
     "variantDeactivateConfirm": "Esta variante se desactivará al guardar y no se podrá restaurar desde esta pantalla.",
     "variantRemoveAllConfirm": "Al desactivarlo se desactivarán todas las variantes de este producto. Los pedidos anteriores las conservan.",
-    "addonAppliesToCategories": "Available in categories",
-    "selectAll": "Select all",
-    "clearAll": "Clear"
+    "addonAppliesToCategories": "Disponible en categorías",
+    "selectAll": "Seleccionar todo",
+    "clearAll": "Borrar"
   },
   "receipt": {
     "amount": "Monto",
