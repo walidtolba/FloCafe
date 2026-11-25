@@ -108,7 +108,7 @@ An owner can flip any configurable cell for a role, or for one user, from the in
 | Kitchen | Pair a kitchen display | ✓ | ✓ | — | — | — |
 | Kitchen | Manage kitchen stations and assignments | ✓ | ✓ | — | — | — |
 | Reports | View sales and operations reports | ✓ | ✓ | — | — | — |
-| Reports | View financial figures (revenue, refunds, payment mix) | ✓ | — | — | — | — |
+| Reports | View financial figures (revenue, refunds, payment mix, profit) | ✓ | — | — | — | — |
 | Staff | View and manage staff accounts | ✓ | ✓ | — | — | — |
 | Staff | Manage owner and manager accounts and roles | ✓ | — | — | — | — |
 | Staff | Manage cashier, server, and chef accounts | ✓ | ✓ | — | — | — |

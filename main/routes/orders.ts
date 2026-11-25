@@ -28,6 +28,10 @@ import { getTenantCurrency, syncUnpaidBillsForOrder } from './bills';
 import expressRateLimit from 'express-rate-limit';
 import { randomUUID } from 'crypto';
 
+function orderItemUnitCost(product: { cost?: number | null }, variant: { cost_price?: number | null } | null | undefined): number {
+  return Number(variant?.cost_price ?? product.cost ?? 0) || 0;
+}
+
 const router = Router();
 const orderReadRateLimit = expressRateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false });
 const orderWriteRateLimit = expressRateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
@@ -826,8 +830,8 @@ router.post('/', orderWriteRateLimit, requirePermission('orders.create'), (req: 
       const insertItem = db.prepare(`
         INSERT INTO order_items (order_id, product_id, variant_id, product_name, product_sku, unit_price, quantity, inventory_deducted_quantity, inventory_product_id, inventory_variant_id,
           subtotal, tax_amount, tax_breakdown, tax_snapshot, tax_type, discount_amount, total, variant_selection,
-          modifier_selection, special_instructions, recipe_snapshot, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+          modifier_selection, special_instructions, recipe_snapshot, unit_cost, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
       `);
 
       for (const item of items) {
@@ -890,6 +894,7 @@ router.post('/', orderWriteRateLimit, requirePermission('orders.create'), (req: 
           JSON.stringify(item.modifier_selection || null),
           item.special_instructions || null,
           recipeSnapshot ? JSON.stringify(recipeSnapshot) : null,
+          orderItemUnitCost(product, variant),
           itemCreatedAt, itemCreatedAt
         );
         insertOrderItemAddons(db, insertItemResult.lastInsertRowid, item.addons, itemCreatedAt);
@@ -1106,8 +1111,8 @@ router.post('/:id/items', orderWriteRateLimit, requirePermission('orders.create'
       const insertItem = db.prepare(`
         INSERT INTO order_items (order_id, product_id, variant_id, product_name, product_sku, unit_price, quantity, inventory_deducted_quantity, inventory_product_id, inventory_variant_id,
           subtotal, tax_amount, tax_breakdown, tax_snapshot, tax_type, discount_amount, total, variant_selection,
-          modifier_selection, special_instructions, recipe_snapshot, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+          modifier_selection, special_instructions, recipe_snapshot, unit_cost, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
       `);
 
       const insertedItemIds: (number | bigint)[] = [];
@@ -1159,6 +1164,7 @@ router.post('/:id/items', orderWriteRateLimit, requirePermission('orders.create'
           JSON.stringify(item.modifier_selection || null),
           item.special_instructions || null,
           recipeSnapshot ? JSON.stringify(recipeSnapshot) : null,
+          orderItemUnitCost(product, variant),
           itemCreatedAt, itemCreatedAt
         );
         insertOrderItemAddons(db, insertItemResult.lastInsertRowid, item.addons, itemCreatedAt);

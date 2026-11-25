@@ -469,7 +469,9 @@
     "uptimeLabel": "أعلى: ",
     "user": "المستخدم",
     "whatsapp": "واتساب",
-    "inventory": "المخزون"
+    "inventory": "المخزون",
+    "profit": "الأرباح",
+    "menuBar": "قائمة التنقل"
   },
   "orders": {
     "active": "نشط",
@@ -736,6 +738,7 @@
     "managerPinRequired": "يلزم إدخال رقم التعريف الشخصي (PIN) الخاص بالمدير للحصول على الخصومات",
     "maxSelectionReached": "تم الوصول إلى الحد الأقصى لـ {count}",
     "menuLoadFailed": "فشل تحميل بيانات القائمة",
+    "reorderFailed": "فشل حفظ الترتيب الجديد",
     "methodCard": "بطاقة",
     "methodCash": "النقد",
     "methodWallet": "المحفظة",
@@ -2230,7 +2233,12 @@
     "chargeAutoApply": "تطبيق تلقائي",
     "chargePercentValue": "{value}% من الطلب",
     "chargeFixedValue": "{value} لكل طلب",
-    "chargeOptionalApply": "يُضاف عند الطلب"
+    "chargeOptionalApply": "يُضاف عند الطلب",
+    "navLayoutTitle": "تخطيط التنقل في التطبيق",
+    "navLayoutSidebar": "شريط جانبي",
+    "navLayoutSidebarHint": "الصفحات في شريط جانبي.",
+    "navLayoutTopbar": "شريط القوائم العلوي",
+    "navLayoutTopbarHint": "الصفحات في شريط قوائم بالأعلى؛ وفي نقطة البيع تظهر الفئات كشبكة على الجانب."
   },
   "setup": {
     "alreadyCompleted": "تم الانتهاء من عملية الإعداد في هذا التثبيت. يتم إعادة التوجيه إلى صفحة تسجيل الدخول…",
@@ -3028,5 +3036,48 @@
       "inbox": "صندوق الوارد",
       "sent": "تم الإرسال"
     }
+  },
+  "profit": {
+    "title": "الأرباح",
+    "subtitle": "صافي المبيعات مطروحاً منه تكلفة المنتجات المباعة.",
+    "preset": {
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "last7": "آخر 7 أيام",
+      "thisMonth": "هذا الشهر",
+      "lastMonth": "الشهر الماضي",
+      "custom": "مخصص"
+    },
+    "from": "من",
+    "to": "إلى",
+    "groupDay": "حسب اليوم",
+    "groupMonth": "حسب الشهر",
+    "compare": "مقارنة بالفترة السابقة",
+    "previousPeriod": "الفترة السابقة: {start} – {end}",
+    "netSales": "صافي المبيعات",
+    "cost": "التكلفة",
+    "profit": "الربح",
+    "margin": "هامش الربح",
+    "marginPrevious": "السابق: {value}",
+    "vsPrevious": "مقارنة بالسابق",
+    "newVsPrevious": "جديد مقارنة بالسابق",
+    "trendTitle": "المبيعات والتكلفة والربح",
+    "noData": "لا توجد مبيعات في هذه الفترة.",
+    "highlights": "أبرز النقاط",
+    "bestPeriod": "أفضل فترة",
+    "worstPeriod": "أضعف فترة",
+    "orders": "الطلبات",
+    "itemsSold": "الأصناف المباعة",
+    "profitPerOrder": "الربح لكل طلب",
+    "topByProfit": "أعلى المنتجات ربحاً",
+    "productsTitle": "الربح حسب المنتج",
+    "sortBy": "ترتيب حسب",
+    "colProduct": "المنتج",
+    "colQty": "الكمية",
+    "missingCost": "بدون تكلفة",
+    "missingCostHint": "هذا المنتج بلا تكلفة محددة، لذا يساوي ربحه مبيعاته.",
+    "missingCostBanner": "{count, plural, one {# منتج بلا تكلفة محددة} other {# منتجات بلا تكلفة محددة}}، مما يضخّم الربح.",
+    "setCosts": "تحديد التكاليف",
+    "loadFailed": "فشل تحميل التقرير"
   }
 }

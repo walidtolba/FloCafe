@@ -481,7 +481,7 @@ committed under `src/components/ui` and are edited in place.
 ```text
 frontend/src/
 ├── app/                        App Router routes
-│   ├── (dashboard)/            Authenticated shell: AuthGuard, title bar, sidebar, status bar
+│   ├── (dashboard)/            Authenticated shell: AuthGuard, title bar, sidebar or top menu bar (`nav_layout`), status bar
 │   │   ├── addon-groups/  customers/  dashboard/  inventory/  kds/
 │   │   ├── order-history-demo/  orders/  pos/  print-test/  products/
 │   │   ├── settings/  staff/  support/  tables/  whatsapp/
@@ -493,7 +493,7 @@ frontend/src/
 ├── components/
 │   ├── dashboard/              Cash close, cash drawer movement, shift open and close
 │   ├── kds/                    Kitchen display, login, tabs and kanban views
-│   ├── layout/                 Title bar, sidebar, status bar, auth guard, theme sync
+│   ├── layout/                 Title bar, sidebar, top menu bar, status bar, auth guard, theme sync
 │   ├── orders/                 Order card, history grid, refund modal
 │   ├── pos/                    Cart, product grid, payment, number pad, checkout modals
 │   ├── products/               Product image uploader

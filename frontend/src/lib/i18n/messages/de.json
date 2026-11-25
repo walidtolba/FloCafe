@@ -469,7 +469,9 @@
     "user": "Benutzer",
     "whatsapp": "WhatsApp",
     "inventory": "Bestand",
-    "tables": "Tische"
+    "tables": "Tische",
+    "profit": "Gewinn",
+    "menuBar": "Navigationsmenü"
   },
   "orders": {
     "active": "Aktiv",
@@ -736,6 +738,7 @@
     "managerPinRequired": "Manager-PIN für Rabatte erforderlich",
     "maxSelectionReached": "Maximum von {count} erreicht",
     "menuLoadFailed": "Menüdaten konnten nicht geladen werden",
+    "reorderFailed": "Neue Reihenfolge konnte nicht gespeichert werden",
     "methodCard": "Karte",
     "methodCash": "Bargeld",
     "methodWallet": "Guthaben / Wallet",
@@ -2230,7 +2233,12 @@
     "chargeAutoApply": "Automatisch anwenden",
     "chargePercentValue": "{value}% der Bestellung",
     "chargeFixedValue": "{value} pro Bestellung",
-    "chargeOptionalApply": "Auf Anfrage hinzugefügt"
+    "chargeOptionalApply": "Auf Anfrage hinzugefügt",
+    "navLayoutTitle": "Navigationslayout",
+    "navLayoutSidebar": "Seitenleiste",
+    "navLayoutSidebarHint": "Seiten in einer Seitenleiste links.",
+    "navLayoutTopbar": "Menüleiste oben",
+    "navLayoutTopbarHint": "Seiten in einer Menüleiste oben; an der Kasse erscheinen die Kategorien links als Raster."
   },
   "setup": {
     "alreadyCompleted": "Die Ersteinrichtung wurde bereits abgeschlossen. Weiterleitung zur Anmeldung…",
@@ -3028,5 +3036,48 @@
       "inbox": "Posteingang",
       "sent": "Gesendet"
     }
+  },
+  "profit": {
+    "title": "Gewinn",
+    "subtitle": "Nettoumsatz abzüglich der Kosten der verkauften Produkte.",
+    "preset": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "last7": "Letzte 7 Tage",
+      "thisMonth": "Dieser Monat",
+      "lastMonth": "Letzter Monat",
+      "custom": "Benutzerdefiniert"
+    },
+    "from": "Von",
+    "to": "Bis",
+    "groupDay": "Pro Tag",
+    "groupMonth": "Pro Monat",
+    "compare": "Mit Vorperiode vergleichen",
+    "previousPeriod": "Vorperiode: {start} – {end}",
+    "netSales": "Nettoumsatz",
+    "cost": "Kosten",
+    "profit": "Gewinn",
+    "margin": "Marge",
+    "marginPrevious": "Vorher: {value}",
+    "vsPrevious": "ggü. Vorperiode",
+    "newVsPrevious": "Neu ggü. Vorperiode",
+    "trendTitle": "Umsatz, Kosten und Gewinn",
+    "noData": "Keine Verkäufe in diesem Zeitraum.",
+    "highlights": "Highlights",
+    "bestPeriod": "Beste Periode",
+    "worstPeriod": "Schwächste Periode",
+    "orders": "Bestellungen",
+    "itemsSold": "Verkaufte Artikel",
+    "profitPerOrder": "Gewinn pro Bestellung",
+    "topByProfit": "Top-Produkte nach Gewinn",
+    "productsTitle": "Gewinn pro Produkt",
+    "sortBy": "Sortieren nach",
+    "colProduct": "Produkt",
+    "colQty": "Menge",
+    "missingCost": "Keine Kosten",
+    "missingCostHint": "Für dieses Produkt sind keine Kosten hinterlegt, daher entspricht der Gewinn dem Umsatz.",
+    "missingCostBanner": "{count, plural, one {Für # Produkt sind} other {Für # Produkte sind}} keine Kosten hinterlegt, was den Gewinn überschätzt.",
+    "setCosts": "Kosten festlegen",
+    "loadFailed": "Bericht konnte nicht geladen werden"
   }
 }

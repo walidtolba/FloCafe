@@ -469,7 +469,9 @@
     "uptimeLabel": "ทำงานมา: ",
     "user": "ผู้ใช้",
     "whatsapp": "WhatsApp",
-    "inventory": "สินค้าคงคลัง"
+    "inventory": "สินค้าคงคลัง",
+    "profit": "Profit",
+    "menuBar": "Navigation menu"
   },
   "orders": {
     "active": "ดำเนินการอยู่",
@@ -736,6 +738,7 @@
     "managerPinRequired": "การให้ส่วนลดต้องใช้ PIN ผู้จัดการ",
     "maxSelectionReached": "เลือกได้สูงสุด {count} รายการ",
     "menuLoadFailed": "ไม่สามารถโหลดข้อมูลเมนูได้",
+    "reorderFailed": "Failed to save the new order",
     "methodCard": "บัตร",
     "methodCash": "เงินสด",
     "methodWallet": "กระเป๋าเงิน",
@@ -2230,7 +2233,12 @@
     "chargeAutoApply": "ใช้งานอัตโนมัติ",
     "chargePercentValue": "{value}% ของคำสั่งซื้อ",
     "chargeFixedValue": "{value} ต่อคำสั่งซื้อ",
-    "chargeOptionalApply": "เพิ่มเมื่อร้องขอ"
+    "chargeOptionalApply": "เพิ่มเมื่อร้องขอ",
+    "navLayoutTitle": "App Navigation Layout",
+    "navLayoutSidebar": "Sidebar",
+    "navLayoutSidebarHint": "Pages listed in a sidebar on the left.",
+    "navLayoutTopbar": "Top menu bar",
+    "navLayoutTopbarHint": "Pages in a menu bar at the top; on POS the categories appear as a grid on the left."
   },
   "setup": {
     "alreadyCompleted": "ตั้งค่าการติดตั้งนี้เสร็จสมบูรณ์แล้ว กำลังกลับไปหน้าเข้าสู่ระบบ…",
@@ -3028,5 +3036,48 @@
       "inbox": "กล่องข้อความ",
       "sent": "ข้อความที่ส่ง"
     }
+  },
+  "profit": {
+    "title": "Profit",
+    "subtitle": "Net sales minus the cost of the products sold.",
+    "preset": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "groupDay": "By day",
+    "groupMonth": "By month",
+    "compare": "Compare with previous period",
+    "previousPeriod": "Previous period: {start} – {end}",
+    "netSales": "Net sales",
+    "cost": "Cost",
+    "profit": "Profit",
+    "margin": "Margin",
+    "marginPrevious": "Previous: {value}",
+    "vsPrevious": "vs previous",
+    "newVsPrevious": "New vs previous",
+    "trendTitle": "Sales, cost and profit",
+    "noData": "No sales in this period.",
+    "highlights": "Highlights",
+    "bestPeriod": "Best period",
+    "worstPeriod": "Weakest period",
+    "orders": "Orders",
+    "itemsSold": "Items sold",
+    "profitPerOrder": "Profit per order",
+    "topByProfit": "Top products by profit",
+    "productsTitle": "Profit by product",
+    "sortBy": "Sort by",
+    "colProduct": "Product",
+    "colQty": "Qty",
+    "missingCost": "No cost",
+    "missingCostHint": "This product has no cost set, so its profit equals its sales.",
+    "missingCostBanner": "{count, plural, one {# product has} other {# products have}} no cost set, which overstates profit.",
+    "setCosts": "Set product costs",
+    "loadFailed": "Failed to load profit report"
   }
 }

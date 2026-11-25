@@ -5,6 +5,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'use-intl';
 import { useAuthStore } from '@/store/auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useNavLayoutStore } from '@/store/nav-layout';
 import { Ltr } from './Ltr';
 import ApplicationMenuRow from './ApplicationMenuRow';
 import UpdateBadge from './UpdateBadge';
@@ -15,6 +16,7 @@ const getServerElectronCapability = () => false;
 
 export default function TitleBar() {
   const { currentTenant, user } = useAuthStore();
+  const showSidebarTrigger = useNavLayoutStore((s) => s.layout) === 'sidebar';
   const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');
   const tStaff = useTranslations('staff');
@@ -83,10 +85,12 @@ export default function TitleBar() {
       <div className="flo-title-bar__safe-area pointer-events-none flex w-full items-center justify-between">
         {/* Leading edge: Sidebar toggle button (placed after traffic lights on macOS, top-left on Windows/Linux) */}
         <div className="flo-title-bar__interactive pointer-events-auto flex items-center translate-y-[1.5px]">
-          <SidebarTrigger
-            aria-label={tNav('toggleSidebar')}
-            className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-          />
+          {showSidebarTrigger && (
+            <SidebarTrigger
+              aria-label={tNav('toggleSidebar')}
+              className="size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+            />
+          )}
         </div>
 
         {/* Windows/Linux: the frameless window has no native menu bar, so the

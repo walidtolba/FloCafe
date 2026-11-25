@@ -114,11 +114,18 @@ const OPTIONAL_SETTING_DEFAULTS: Record<string, string> = {
   theme_mode: 'system',
   // Orders screen layout (#639): master/detail split view is the default.
   orders_layout: 'split',
+  // App navigation shell: left sidebar or top menu bar.
+  nav_layout: 'sidebar',
 };
 
 /** Single authority for the orders_layout enum; both write transports gate on it. */
 export function isOrdersLayout(value: unknown): value is 'split' | 'cards' {
   return value === 'split' || value === 'cards';
+}
+
+/** Single authority for the nav_layout enum; both write transports gate on it. */
+export function isNavLayout(value: unknown): value is 'sidebar' | 'topbar' {
+  return value === 'sidebar' || value === 'topbar';
 }
 
 function maskSetting(key: string, value: string): string {
@@ -1021,6 +1028,18 @@ router.put('/charges', settingsWriteRateLimit, requirePermission('settings.manag
 
 // ── Orders screen layout (must come BEFORE /:key wildcard) ─────────────────
 
+/** Every signed-in role renders the app shell, so the navigation layout is readable without a settings permission. Writes stay on the generic route (`settings.manage`). */
+router.get('/nav_layout', settingsReadRateLimit, (_req: Request, res: Response) => {
+  try {
+    const setting = getDatabase().prepare('SELECT * FROM settings WHERE key = ?').get('nav_layout');
+    if (setting) return res.json({ setting });
+    return res.json({ setting: { key: 'nav_layout', value: OPTIONAL_SETTING_DEFAULTS.nav_layout, updated_at: null } });
+  } catch (error) {
+    console.error('[API] Internal error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 /**
  * The Orders layout is a tenant-wide display preference, so every role that can
  * open Orders has to read it — including roles denied `settings.view`. Writes
@@ -1063,6 +1082,7 @@ const ALLOWED_WILDCARD_KEYS = new Set([
   'currency_display', 'number_digits', 'calendar',
   'theme_mode',
   'orders_layout',
+  'nav_layout',
 ]);
 
 /**
@@ -1274,6 +1294,9 @@ router.put('/:key', settingsWriteRateLimit, requirePermission('settings.manage')
     }
     if (req.params.key === 'orders_layout' && !isOrdersLayout(value)) {
       return res.status(400).json({ error: 'orders_layout must be "split" or "cards"' });
+    }
+    if (req.params.key === 'nav_layout' && !isNavLayout(value)) {
+      return res.status(400).json({ error: 'nav_layout must be "sidebar" or "topbar"' });
     }
     let valueToPersist: unknown = value;
     if (req.params.key === 'currency') {

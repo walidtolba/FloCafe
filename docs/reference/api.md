@@ -682,6 +682,8 @@ day-boundary rules.
 | `GET` | `/tax-components` | `ROLE_ACCESS.ownerManager` | query: `?start_date`, `?end_date` | - |
 | `GET` | `/sales` | `ROLE_ACCESS.ownerManager` | query: `?start_date`, `?end_date` | - |
 | `GET` | `/topProducts` | `ROLE_ACCESS.ownerManager` | query: `?start_date`, `?end_date`, `?limit` | - |
+| `GET` | `/topCategories` | `reports.view` | query: `?start_date`, `?end_date`, `?limit` (max 100) | Categories ranked by revenue for a business-date range; cancelled items are excluded. |
+| `GET` | `/profit` | `reports.financial.view` (`ROLE_ACCESS.owner` by default) | query: `?start_date`, `?end_date` (max 800 days), `?group_by` (`day` or `month`), `?compare=previous` | Net sales (item subtotal minus item discount, tax excluded) minus cost of goods. Cost is the `order_items.unit_cost` sale-time snapshot (variant cost, else product cost) and falls back to the current variant or product cost for rows that predate the snapshot. Cancelled orders and cancelled, voided, refunded, and void-adjustment items are excluded; order-level discounts are not allocated to items. Returns `totals`, a gap-free `series` bucketed by tenant business day or month, `bestPeriod`, `worstPeriod`, per-product rows with a `missingCost` flag, and, with `compare=previous`, the preceding period of equal length. |
 | `GET` | `/recentOrders` | `ROLE_ACCESS.ownerManager` | query: `?limit`, `?date`, `?start_date`, `?end_date` | - |
 | `GET` | `/tables` | `ROLE_ACCESS.ownerManager` | none | Table-level utilisation for the current business date; no date parameter. |
 | `GET` | `/insights` | `ROLE_ACCESS.ownerManager` | query: `?days` | - |

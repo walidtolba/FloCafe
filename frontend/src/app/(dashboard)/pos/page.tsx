@@ -26,6 +26,7 @@ import TableCheckoutModal from '@/components/pos/TableCheckoutModal';
 import PaymentModal from '@/components/pos/PaymentModal';
 import PrepaidCheckoutModal, { type PrepaidPayment, type PrepaidDiscount } from '@/components/pos/PrepaidCheckoutModal';
 import PosTopbar from '@/components/pos/PosTopbar';
+import { useNavLayoutStore } from '@/store/nav-layout';
 import dynamic from 'next/dynamic';
 import { ShiftOpenModal } from '@/components/dashboard/ShiftOpenModal';
 import { ShiftCloseModal } from '@/components/dashboard/ShiftCloseModal';
@@ -111,6 +112,7 @@ export default function POSPage() {
   const heldOrders = useHeldOrdersStore();
   const { customerMandatory, autoPrintKot, autoPrintBill, billingType, tablesRequired, kotPrintingEnabled, setBillingType, setTablesRequired, setKotPrintingEnabled, cartTabInlineClose, cartTabsAllowMultipleEmpty, cartTabKeepOpenOnPlaceOrder, cartTabChipWidth, cartTabChipHeight, cartTabCloseButtonSize, quickAddEnabled } = usePosSettingsStore();
   const { open: leftSidebarOpen } = useSidebar();
+  const navLayout = useNavLayoutStore((s) => s.layout);
   const t = useTranslations('pos');
   const tCommon = useTranslations('common');
   const tSupport = useTranslations('support');
@@ -589,6 +591,30 @@ export default function POSPage() {
     // Always open modal so user can add notes and adjust quantity
     setAddonInitialVariant(null);
     setAddonProduct(product);
+  };
+
+  const handleCustomizeProduct = (product: Product) => {
+    setAddonInitialVariant(null);
+    setAddonProduct(product);
+  };
+
+  const canManageCatalog = tenantCan(currentTenant, 'catalog.manage');
+
+  const reorderCatalog = async <T extends { id: string | number }>(
+    kind: 'categories' | 'products',
+    orderedIds: string[],
+    current: T[],
+    apply: (next: T[]) => void,
+  ) => {
+    const byId = new Map(current.map((item) => [String(item.id), item]));
+    const previous = current;
+    apply(orderedIds.map((id) => byId.get(id)).filter((item): item is T => !!item));
+    try {
+      await api.put(`/${kind}/reorder`, { ids: orderedIds });
+    } catch {
+      apply(previous);
+      toast.error(t('reorderFailed'));
+    }
   };
 
   const handleScannedVariant = (product: Product, variant: ProductVariant) => {
@@ -1295,7 +1321,11 @@ export default function POSPage() {
             currency={currency}
             onProductClick={handleProductClick}
             onScannedVariant={handleScannedVariant}
+            onCustomizeProduct={handleCustomizeProduct}
+            onReorderCategories={canManageCatalog ? (ids) => reorderCatalog('categories', ids, categories, setCategories) : undefined}
+            onReorderProducts={canManageCatalog ? (ids) => reorderCatalog('products', ids, products, setProducts) : undefined}
             sidebarOpen={leftSidebarOpen}
+            categoryLayout={navLayout === 'topbar' ? 'tiles' : 'chips'}
           />
         </div>
 

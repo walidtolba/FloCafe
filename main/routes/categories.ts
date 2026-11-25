@@ -183,6 +183,28 @@ router.get('/', requirePermission('catalog.view'), (req: Request, res: Response)
   }
 });
 
+router.put('/reorder', categoryWriteRateLimit, requirePermission('catalog.manage'), (req: Request, res: Response) => {
+  try {
+    const ids = req.body?.ids;
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > 5000 || ids.some((id: unknown) => typeof id !== 'string' || !id)) {
+      return res.status(400).json({ error: 'ids must be a non-empty array of category ids' });
+    }
+    if (new Set(ids).size !== ids.length) {
+      return res.status(400).json({ error: 'ids must not contain duplicates' });
+    }
+    const db = getDatabase();
+    const update = db.prepare('UPDATE categories SET sort_order = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL');
+    const timestamp = now();
+    db.transaction(() => {
+      ids.forEach((id: string, index: number) => update.run(index, timestamp, id));
+    })();
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("[API] Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get('/:id', requirePermission('catalog.view'), (req: Request, res: Response) => {
   try {
     const db = getDatabase();

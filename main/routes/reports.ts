@@ -382,6 +382,175 @@ router.get('/sales', requirePermission('reports.view'), (req: Request, res: Resp
   }
 });
 
+const PROFIT_MAX_DAYS = 800;
+
+function shiftIsoDate(date: string, days: number): string {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function roundMoney(value: number): number {
+  return Math.round(value * 10000) / 10000;
+}
+
+interface ProfitItemRow {
+  order_id: number;
+  created_at: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  net_sales: number;
+  unit_cost: number;
+  cost_known: number;
+}
+
+interface ProfitTotals {
+  netSales: number;
+  cost: number;
+  profit: number;
+  marginPct: number | null;
+  orders: number;
+  itemsSold: number;
+}
+
+function loadProfitItems(startDate: string, endDate: string): ProfitItemRow[] {
+  const windowStart = reportDayBounds(startDate)[0];
+  const windowEnd = reportDayBounds(endDate)[1];
+  // Cost comes from the sale-time snapshot; rows created before the snapshot
+  // existed fall back to the item's current variant/product cost.
+  return getDatabase().prepare(`
+    SELECT oi.order_id, o.created_at, oi.product_id, oi.product_name, oi.quantity,
+      (oi.subtotal - COALESCE(oi.discount_amount, 0)) AS net_sales,
+      COALESCE(oi.unit_cost, pv.cost_price, p.cost, 0) AS unit_cost,
+      CASE WHEN COALESCE(oi.unit_cost, pv.cost_price, p.cost, 0) > 0 THEN 1 ELSE 0 END AS cost_known
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    LEFT JOIN products p ON p.id = oi.product_id
+    LEFT JOIN product_variants pv ON pv.id = oi.variant_id
+    WHERE o.created_at >= ? AND o.created_at < ?
+      AND o.status != 'cancelled'
+      AND oi.status NOT IN ('cancelled', 'voided', 'refunded', 'void_adjustment')
+  `).all(windowStart, windowEnd) as ProfitItemRow[];
+}
+
+function summariseProfit(rows: ProfitItemRow[]): ProfitTotals {
+  let netSales = 0;
+  let cost = 0;
+  let itemsSold = 0;
+  const orders = new Set<number>();
+  for (const row of rows) {
+    netSales += Number(row.net_sales) || 0;
+    cost += (Number(row.unit_cost) || 0) * (Number(row.quantity) || 0);
+    itemsSold += Number(row.quantity) || 0;
+    orders.add(row.order_id);
+  }
+  const profit = netSales - cost;
+  return {
+    netSales: roundMoney(netSales),
+    cost: roundMoney(cost),
+    profit: roundMoney(profit),
+    marginPct: netSales > 0 ? Math.round((profit / netSales) * 1000) / 10 : null,
+    orders: orders.size,
+    itemsSold: roundMoney(itemsSold),
+  };
+}
+
+router.get('/profit', requirePermission('reports.financial.view'), (req: Request, res: Response) => {
+  try {
+    const today = reportToday();
+    const startDate = reportDate(req.query.start_date, today);
+    const endDate = reportDate(req.query.end_date, today);
+    if (startDate > endDate) {
+      return res.status(400).json({ error: 'start_date must be on or before end_date' });
+    }
+    const spanDays = Math.round((Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / 86400000) + 1;
+    if (spanDays > PROFIT_MAX_DAYS) {
+      return res.status(400).json({ error: `date range must not exceed ${PROFIT_MAX_DAYS} days` });
+    }
+    const groupBy = req.query.group_by === 'month' ? 'month' : 'day';
+    const timeZone = tenantTimezone();
+    const startTime = tenantStartTime();
+
+    const rows = loadProfitItems(startDate, endDate);
+    const totals = summariseProfit(rows);
+
+    const buckets = new Map<string, { netSales: number; cost: number }>();
+    const bucketKey = (date: string) => (groupBy === 'month' ? date.slice(0, 7) : date);
+    for (let offset = 0; offset < spanDays; offset += 1) {
+      buckets.set(bucketKey(shiftIsoDate(startDate, offset)), { netSales: 0, cost: 0 });
+    }
+    const products = new Map<string, { productId: string; name: string; quantity: number; netSales: number; cost: number; missingCost: boolean }>();
+    for (const row of rows) {
+      const key = bucketKey(localDateInTimezone(parseDbTimestamp(row.created_at), timeZone, startTime));
+      const bucket = buckets.get(key) ?? { netSales: 0, cost: 0 };
+      const lineCost = (Number(row.unit_cost) || 0) * (Number(row.quantity) || 0);
+      bucket.netSales += Number(row.net_sales) || 0;
+      bucket.cost += lineCost;
+      buckets.set(key, bucket);
+
+      const entry = products.get(String(row.product_id)) ?? {
+        productId: String(row.product_id), name: row.product_name, quantity: 0, netSales: 0, cost: 0, missingCost: false,
+      };
+      entry.quantity += Number(row.quantity) || 0;
+      entry.netSales += Number(row.net_sales) || 0;
+      entry.cost += lineCost;
+      if (!row.cost_known) entry.missingCost = true;
+      products.set(entry.productId, entry);
+    }
+
+    const series = [...buckets.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([period, value]) => ({
+        period,
+        netSales: roundMoney(value.netSales),
+        cost: roundMoney(value.cost),
+        profit: roundMoney(value.netSales - value.cost),
+      }));
+    const active = series.filter((point) => point.netSales !== 0 || point.cost !== 0);
+    const best = active.reduce<typeof series[number] | null>((acc, point) => (!acc || point.profit > acc.profit ? point : acc), null);
+    const worst = active.reduce<typeof series[number] | null>((acc, point) => (!acc || point.profit < acc.profit ? point : acc), null);
+
+    let previous: { startDate: string; endDate: string; totals: ProfitTotals } | null = null;
+    if (req.query.compare === 'previous') {
+      const previousEnd = shiftIsoDate(startDate, -1);
+      const previousStart = shiftIsoDate(previousEnd, -(spanDays - 1));
+      previous = { startDate: previousStart, endDate: previousEnd, totals: summariseProfit(loadProfitItems(previousStart, previousEnd)) };
+    }
+
+    res.json({
+      profit: {
+        startDate,
+        endDate,
+        groupBy,
+        totals,
+        previous,
+        series,
+        bestPeriod: best,
+        worstPeriod: worst,
+        products: [...products.values()]
+          .map((entry) => {
+            const profit = entry.netSales - entry.cost;
+            return {
+              productId: entry.productId,
+              name: entry.name,
+              quantity: roundMoney(entry.quantity),
+              netSales: roundMoney(entry.netSales),
+              cost: roundMoney(entry.cost),
+              profit: roundMoney(profit),
+              marginPct: entry.netSales > 0 ? Math.round((profit / entry.netSales) * 1000) / 10 : null,
+              missingCost: entry.missingCost,
+            };
+          })
+          .sort((left, right) => right.profit - left.profit),
+      },
+    });
+  } catch (error: any) {
+    console.error("[API] Internal error:", error);
+    res.status(error.statusCode || 500).json({ error: error.statusCode ? error.message : "Internal server error" });
+  }
+});
+
 router.get('/topProducts', requirePermission('reports.view'), (req: Request, res: Response) => {
   try {
     const db = getDatabase();
@@ -410,6 +579,41 @@ router.get('/topProducts', requirePermission('reports.view'), (req: Request, res
     `).all(windowStart, windowEnd, limit);
 
     res.json({ topProducts });
+  } catch (error: any) {
+    console.error("[API] Internal error:", error);
+    res.status(error.statusCode || 500).json({ error: error.statusCode ? error.message : "Internal server error" });
+  }
+});
+
+router.get('/topCategories', requirePermission('reports.view'), (req: Request, res: Response) => {
+  try {
+    const db = getDatabase();
+    const today = reportToday();
+    const startDate = reportDate(req.query.start_date, today);
+    const endDate = reportDate(req.query.end_date, today);
+    if (startDate > endDate) {
+      return res.status(400).json({ error: 'start_date must be on or before end_date' });
+    }
+    const requestedLimit = Number(req.query.limit);
+    const limit = Number.isInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 10;
+    const windowStart = reportDayBounds(startDate)[0];
+    const windowEnd = reportDayBounds(endDate)[1];
+
+    const topCategories = db.prepare(`
+      SELECT c.id as category_id, COALESCE(c.name, 'Uncategorized') as name,
+        COALESCE(SUM(oi.quantity), 0) as quantity,
+        COALESCE(SUM(oi.subtotal), 0) as revenue
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      JOIN products p ON p.id = oi.product_id
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE o.created_at >= ? AND o.created_at < ? AND oi.status != 'cancelled'
+      GROUP BY c.id
+      ORDER BY revenue DESC
+      LIMIT ?
+    `).all(windowStart, windowEnd, limit);
+
+    res.json({ topCategories });
   } catch (error: any) {
     console.error("[API] Internal error:", error);
     res.status(error.statusCode || 500).json({ error: error.statusCode ? error.message : "Internal server error" });

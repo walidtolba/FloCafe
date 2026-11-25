@@ -469,7 +469,9 @@
     "user": "Người dùng",
     "whatsapp": "WhatsApp",
     "inventory": "Kho",
-    "tables": "Bàn"
+    "tables": "Bàn",
+    "profit": "Profit",
+    "menuBar": "Navigation menu"
   },
   "orders": {
     "active": "Đang hoạt động",
@@ -736,6 +738,7 @@
     "managerPinRequired": "Cần mã PIN quản lý để áp dụng giảm giá",
     "maxSelectionReached": "Đã đạt tối đa {count}",
     "menuLoadFailed": "Không thể tải dữ liệu thực đơn",
+    "reorderFailed": "Failed to save the new order",
     "methodCard": "Thẻ",
     "methodCash": "Tiền mặt",
     "methodWallet": "Ví",
@@ -2230,7 +2233,12 @@
     "chargeAutoApply": "Tự động áp dụng",
     "chargePercentValue": "{value}% đơn hàng",
     "chargeFixedValue": "{value} mỗi đơn hàng",
-    "chargeOptionalApply": "Thêm theo yêu cầu"
+    "chargeOptionalApply": "Thêm theo yêu cầu",
+    "navLayoutTitle": "App Navigation Layout",
+    "navLayoutSidebar": "Sidebar",
+    "navLayoutSidebarHint": "Pages listed in a sidebar on the left.",
+    "navLayoutTopbar": "Top menu bar",
+    "navLayoutTopbarHint": "Pages in a menu bar at the top; on POS the categories appear as a grid on the left."
   },
   "setup": {
     "alreadyCompleted": "Bản cài đặt này đã hoàn tất thiết lập. Đang chuyển đến đăng nhập…",
@@ -3028,5 +3036,48 @@
       "inbox": "Hộp thư đến",
       "sent": "Đã gửi"
     }
+  },
+  "profit": {
+    "title": "Profit",
+    "subtitle": "Net sales minus the cost of the products sold.",
+    "preset": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "groupDay": "By day",
+    "groupMonth": "By month",
+    "compare": "Compare with previous period",
+    "previousPeriod": "Previous period: {start} – {end}",
+    "netSales": "Net sales",
+    "cost": "Cost",
+    "profit": "Profit",
+    "margin": "Margin",
+    "marginPrevious": "Previous: {value}",
+    "vsPrevious": "vs previous",
+    "newVsPrevious": "New vs previous",
+    "trendTitle": "Sales, cost and profit",
+    "noData": "No sales in this period.",
+    "highlights": "Highlights",
+    "bestPeriod": "Best period",
+    "worstPeriod": "Weakest period",
+    "orders": "Orders",
+    "itemsSold": "Items sold",
+    "profitPerOrder": "Profit per order",
+    "topByProfit": "Top products by profit",
+    "productsTitle": "Profit by product",
+    "sortBy": "Sort by",
+    "colProduct": "Product",
+    "colQty": "Qty",
+    "missingCost": "No cost",
+    "missingCostHint": "This product has no cost set, so its profit equals its sales.",
+    "missingCostBanner": "{count, plural, one {# product has} other {# products have}} no cost set, which overstates profit.",
+    "setCosts": "Set product costs",
+    "loadFailed": "Failed to load profit report"
   }
 }

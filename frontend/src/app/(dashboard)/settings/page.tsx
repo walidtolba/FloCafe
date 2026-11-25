@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { usePosSettingsStore, type BillTemplate } from '@/store/pos-settings';
 import { useThemeMode, type ThemeMode } from '@/store/theme';
 import { useOrdersLayoutPreference } from '@/hooks/useOrdersLayout';
+import { useNavLayoutPreference } from '@/hooks/useNavLayout';
 import type { KotLanguagePolicy, PrimaryLanguageSelection, ReceiptLanguagePolicy } from '@print/types';
 import {
   parseStoredKotLanguagePolicy,
@@ -361,6 +362,7 @@ export default function SettingsPage() {
 
   const themeMode = useThemeMode((s) => s.mode);
   const { layout: ordersLayout, save: saveOrdersLayout } = useOrdersLayoutPreference();
+  const { layout: navLayout, save: saveNavLayout } = useNavLayoutPreference();
   const setThemeMode = useThemeMode((s) => s.setMode);
   const markUserSelectedTheme = useThemeMode((s) => s.markUserSelected);
 
@@ -3174,6 +3176,46 @@ export default function SettingsPage() {
                       role="radio"
                       aria-checked={active}
                       onClick={() => { if (!active) void saveOrdersLayout(option.value); }}
+                      className={`text-start rounded-lg border-2 px-4 py-3 transition ${
+                        active ? 'border-brand bg-brand/5' : 'border-border hover:border-gray-300 dark:border-border'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={`inline-block w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            active ? 'border-brand' : 'border-gray-300 dark:border-border'
+                          }`}
+                        >
+                          {active && <span className="block w-2 h-2 rounded-full bg-brand" />}
+                        </span>
+                        <span className="font-medium text-foreground">{option.label}</span>
+                      </div>
+                      <p className="mt-1 ps-6 text-xs text-muted-foreground">{option.hint}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-card rounded-xl border border-border p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <LayoutPanelTop size={20} className="text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">{t('navLayoutTitle')}</h2>
+              </div>
+              <div className="flex flex-col gap-3" role="radiogroup" aria-label={t('navLayoutTitle')}>
+                {([
+                  { value: 'sidebar', label: t('navLayoutSidebar'), hint: t('navLayoutSidebarHint') },
+                  { value: 'topbar', label: t('navLayoutTopbar'), hint: t('navLayoutTopbarHint') },
+                ] as const).map((option) => {
+                  const active = navLayout === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => { if (!active) void saveNavLayout(option.value); }}
                       className={`text-start rounded-lg border-2 px-4 py-3 transition ${
                         active ? 'border-brand bg-brand/5' : 'border-border hover:border-gray-300 dark:border-border'
                       }`}

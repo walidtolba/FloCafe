@@ -469,7 +469,9 @@
     "uptimeLabel": "运行：",
     "user": "用户",
     "whatsapp": "WhatsApp",
-    "inventory": "库存"
+    "inventory": "库存",
+    "profit": "Profit",
+    "menuBar": "Navigation menu"
   },
   "orders": {
     "active": "进行中",
@@ -736,6 +738,7 @@
     "managerPinRequired": "折扣需要经理 PIN",
     "maxSelectionReached": "已达最多 {count} 个",
     "menuLoadFailed": "加载菜单数据失败",
+    "reorderFailed": "Failed to save the new order",
     "methodCard": "银行卡",
     "methodCash": "现金",
     "methodWallet": "钱包",
@@ -2230,7 +2233,12 @@
     "chargeAutoApply": "自动应用",
     "chargePercentValue": "订单金额的 {value}%",
     "chargeFixedValue": "每单 {value}",
-    "chargeOptionalApply": "按需添加"
+    "chargeOptionalApply": "按需添加",
+    "navLayoutTitle": "App Navigation Layout",
+    "navLayoutSidebar": "Sidebar",
+    "navLayoutSidebarHint": "Pages listed in a sidebar on the left.",
+    "navLayoutTopbar": "Top menu bar",
+    "navLayoutTopbarHint": "Pages in a menu bar at the top; on POS the categories appear as a grid on the left."
   },
   "setup": {
     "alreadyCompleted": "此安装已完成设置。正在跳转到登录…",
@@ -3028,5 +3036,48 @@
       "inbox": "收件箱",
       "sent": "已发送"
     }
+  },
+  "profit": {
+    "title": "Profit",
+    "subtitle": "Net sales minus the cost of the products sold.",
+    "preset": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "groupDay": "By day",
+    "groupMonth": "By month",
+    "compare": "Compare with previous period",
+    "previousPeriod": "Previous period: {start} – {end}",
+    "netSales": "Net sales",
+    "cost": "Cost",
+    "profit": "Profit",
+    "margin": "Margin",
+    "marginPrevious": "Previous: {value}",
+    "vsPrevious": "vs previous",
+    "newVsPrevious": "New vs previous",
+    "trendTitle": "Sales, cost and profit",
+    "noData": "No sales in this period.",
+    "highlights": "Highlights",
+    "bestPeriod": "Best period",
+    "worstPeriod": "Weakest period",
+    "orders": "Orders",
+    "itemsSold": "Items sold",
+    "profitPerOrder": "Profit per order",
+    "topByProfit": "Top products by profit",
+    "productsTitle": "Profit by product",
+    "sortBy": "Sort by",
+    "colProduct": "Product",
+    "colQty": "Qty",
+    "missingCost": "No cost",
+    "missingCostHint": "This product has no cost set, so its profit equals its sales.",
+    "missingCostBanner": "{count, plural, one {# product has} other {# products have}} no cost set, which overstates profit.",
+    "setCosts": "Set product costs",
+    "loadFailed": "Failed to load profit report"
   }
 }

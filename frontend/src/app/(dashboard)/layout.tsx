@@ -2,6 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import AppSidebar from '@/components/layout/Sidebar';
+import TopNavBar from '@/components/layout/TopNavBar';
+import { useNavLayoutPreference } from '@/hooks/useNavLayout';
 import AuthGuard from '@/components/layout/AuthGuard';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import StatusBar from '@/components/layout/StatusBar';
@@ -24,17 +26,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isSettings = pathname === '/settings';
   // Sync printer status early so hardware and WebUSB reconnect before first print.
   usePrinterStatusSync();
+  const { layout: navLayout } = useNavLayoutPreference();
+  const topbar = navLayout === 'topbar';
 
   return (
     <AuthGuard>
       <SidebarProvider defaultOpen className="flex h-screen min-h-0 flex-col w-full" style={{ minHeight: 0 }}>
         <TitleBar />
+        {topbar && <TopNavBar />}
         <div className="flex min-h-0 flex-1 w-full overflow-hidden">
-          <AppSidebar />
+          {!topbar && <AppSidebar />}
           <SidebarInset className="h-full min-h-0 overflow-hidden flex flex-col">
             {/* Mobile-only app bar: below md the sidebar renders as a Sheet with
                 no opener, so expose the trigger here (Refs #241). */}
-            <div className="md:hidden flex items-center px-2 py-1.5 border-b border-border bg-card shrink-0">
+            <div className={`md:hidden ${topbar ? 'hidden' : 'flex'} items-center px-2 py-1.5 border-b border-border bg-card shrink-0`}>
               <SidebarTrigger className="size-8" aria-label="Open navigation" />
             </div>
             {!isPos && <GlobalNotifications />}

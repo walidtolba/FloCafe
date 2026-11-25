@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import { PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
+import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react';
+import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import type { Category, Product, ProductVariant } from '@/lib/types';
 import { useCartStore } from '@/store/cart';
@@ -39,6 +42,33 @@ function getCategoryColorClasses(color: string | null | undefined) {
   return CATEGORY_COLORS[color.toLowerCase()] || null;
 }
 
+const holdToDrag = () => [new PointerActivationConstraints.Delay({ value: 250, tolerance: 8 })];
+
+type SortableKind = 'category' | 'product';
+
+function Sortable({ id, index, kind, enabled, className, children }: {
+  id: string;
+  index: number;
+  kind: SortableKind;
+  enabled: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const { ref, isDragging } = useSortable({ id: `${kind}:${id}`, index, group: kind, type: kind, disabled: !enabled });
+  return (
+    <div ref={ref} className={`${className ?? ''} ${isDragging ? 'opacity-60 z-20' : ''}`}>
+      {children}
+    </div>
+  );
+}
+
+function moveItem<T>(list: T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
 interface Props {
   categories: Category[];
   products: Product[];
@@ -51,11 +81,19 @@ interface Props {
   /** A scanned variant goes through the cart customizer, so required add-ons and sold-out gating still apply. */
   onScannedVariant?: (product: Product, variant: ProductVariant) => void;
   sidebarOpen?: boolean;
+  /** Present only for users who may manage the catalog; enables hold-and-drag reordering. */
+  /** Always opens the customizer, even when quick-add is on. */
+  onCustomizeProduct?: (product: Product) => void;
+  /** 'tiles' shows categories as a grid in a left column instead of the chip row. */
+  categoryLayout?: 'chips' | 'tiles';
+  onReorderCategories?: (orderedIds: string[]) => void;
+  onReorderProducts?: (orderedIds: string[]) => void;
 }
 
 export default function ProductGrid({
   categories, products, selectedCategory, setSelectedCategory,
   search, setSearch, onProductClick, onScannedVariant, sidebarOpen = true,
+  onCustomizeProduct, onReorderCategories, onReorderProducts, categoryLayout = 'chips',
 }: Props) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const cart = useCartStore();
@@ -83,7 +121,76 @@ export default function ProductGrid({
     return matchCat && matchSearch;
   });
 
+  const visibleCategories = categories.filter((cat) => cat.id != null);
+  const tiles = categoryLayout === 'tiles';
+  const canReorderCategories = !!onReorderCategories;
+  const canReorderProducts = !!onReorderProducts && !search;
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { source } = event.operation;
+    if (event.canceled || !source || !isSortable(source)) return;
+    const from = source.initialIndex;
+    const to = source.index;
+    if (from === to) return;
+    if (source.type === 'category') {
+      onReorderCategories?.(moveItem(visibleCategories, from, to).map((c) => String(c.id)));
+    } else if (source.type === 'product') {
+      // Slot the reordered subset back into the full catalog order.
+      const reordered = moveItem(filtered, from, to);
+      const subset = new Set(filtered.map((p) => p.id));
+      let cursor = 0;
+      const full = products.map((p) => (subset.has(p.id) ? reordered[cursor++] : p));
+      onReorderProducts?.(full.map((p) => String(p.id)));
+    }
+  };
+
   return (
+    <DragDropProvider
+      sensors={(defaults) => [
+        ...defaults.filter((sensor) => sensor !== PointerSensor),
+        PointerSensor.configure({ activationConstraints: holdToDrag, preventActivation: () => false }),
+      ]}
+      onDragEnd={handleDragEnd}
+    >
+    <div className="flex h-full min-w-0 flex-1 gap-3 overflow-hidden">
+    {tiles && (
+      <div data-testid="pos-category-tiles" className="flex w-60 shrink-0 flex-col gap-2 overflow-y-auto pe-1 lg:w-72">
+        <button
+          type="button"
+          onClick={() => setSelectedCategory(null)}
+          className={`rounded-xl px-3 py-3 text-start text-sm font-semibold transition-colors ${
+            !selectedCategory ? 'bg-brand text-white' : 'border border-border bg-card text-foreground hover:bg-muted'
+          }`}
+        >
+          {t('allCategories')}
+        </button>
+        <div className="grid grid-cols-2 content-start gap-2">
+          {visibleCategories.map((cat, catIndex) => {
+            const colorClasses = getCategoryColorClasses(cat.color);
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <Sortable key={cat.id} id={String(cat.id)} index={catIndex} kind="category" enabled={canReorderCategories}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex min-h-16 w-full items-center justify-center rounded-xl px-2 py-3 text-center text-sm font-semibold leading-snug transition-colors ${
+                    isSelected
+                      ? colorClasses
+                        ? `${colorClasses.activeBg} ${colorClasses.activeText}`
+                        : 'bg-brand text-white'
+                      : colorClasses
+                        ? `${colorClasses.bg} ${colorClasses.text} border ${colorClasses.border} hover:opacity-80`
+                        : 'border border-border bg-card text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <span className="line-clamp-2">{cat.name}</span>
+                </button>
+              </Sortable>
+            );
+          })}
+        </div>
+      </div>
+    )}
     <div data-testid="pos-product-grid" className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
       <div className="shrink-0 mb-3">
         <div className="relative mb-2">
@@ -113,7 +220,7 @@ export default function ProductGrid({
             className="w-full ps-9 pe-4 py-2 bg-card border border-border rounded-xl focus:border-brand outline-none transition-colors text-sm"
           />
         </div>
-        <div data-testid="pos-category-row" className="flex flex-nowrap gap-2 pb-1 overflow-x-auto">
+        {!tiles && <div data-testid="pos-category-row" className="flex flex-nowrap gap-2 pb-1 overflow-x-auto">
           <button
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
@@ -122,12 +229,12 @@ export default function ProductGrid({
           >
             {t('allCategories')}
           </button>
-          {categories.filter((cat) => cat.id != null).map((cat) => {
+          {visibleCategories.map((cat, catIndex) => {
             const colorClasses = getCategoryColorClasses(cat.color);
             const isSelected = selectedCategory === cat.id;
             return (
+              <Sortable key={cat.id} id={String(cat.id)} index={catIndex} kind="category" enabled={canReorderCategories} className="shrink-0">
               <button
-                key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   isSelected
@@ -141,30 +248,33 @@ export default function ProductGrid({
               >
                 {cat.name}
               </button>
+              </Sortable>
             );
           })}
-        </div>
+        </div>}
       </div>
 
       {/* min-h-0 overrides the content-based automatic minimum size, so a long
           catalog scrolls inside the grid instead of growing past the viewport. */}
       <div data-testid="pos-catalog-scroll" className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-0">
         <div className={`grid gap-3 ${
-          sidebarOpen 
-            ? 'grid-cols-4' 
-            : 'grid-cols-5'
+          tiles
+            ? 'grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]'
+            : sidebarOpen
+              ? 'grid-cols-4'
+              : 'grid-cols-5'
         }`}>
-          {filtered.map((product) => {
+          {filtered.map((product, productIndex) => {
             const inCartQty = cartQuantities.get(product.id) || 0;
             
 
             return (
+              <Sortable key={product.id} id={String(product.id)} index={productIndex} kind="product" enabled={canReorderProducts}>
               <button
-                key={product.id}
                 data-testid="pos-product-card"
                 type="button"
                 onClick={() => onProductClick(product)}
-                className="min-h-36 bg-card rounded-xl p-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 hover:shadow-md transition-all text-start relative cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="w-full h-full min-h-36 bg-card rounded-xl p-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 hover:shadow-md transition-all text-start relative cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 {!!product.track_inventory && (
                   <>
@@ -228,9 +338,18 @@ export default function ProductGrid({
                     )}
                     {product.addon_groups && product.addon_groups.length > 0 && (
                       <span
-                        className="touch-target -me-2 -my-2 rounded-lg text-muted-foreground"
+                        role="button"
+                        tabIndex={0}
+                        className="touch-target -me-2 -my-2 rounded-lg text-muted-foreground hover:text-brand"
                         title={t('customisable')}
                         aria-label={t('customisable')}
+                        onClick={(e) => { e.stopPropagation(); onCustomizeProduct ? onCustomizeProduct(product) : onProductClick(product); }}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' && e.key !== ' ') return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onCustomizeProduct ? onCustomizeProduct(product) : onProductClick(product);
+                        }}
                       >
                         <SlidersHorizontal size={16} />
                       </span>
@@ -239,10 +358,13 @@ export default function ProductGrid({
                 </div>
 
               </button>
+              </Sortable>
             );
           })}
         </div>
       </div>
     </div>
+    </div>
+    </DragDropProvider>
   );
 }

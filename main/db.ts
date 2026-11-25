@@ -5806,6 +5806,15 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
       insertSettingIfMissing('ticket_logo', '');
     },
   },
+  {
+    version: 110,
+    name: 'add_order_item_unit_cost',
+    up: () => {
+      if (!getColumns(db, 'order_items').includes('unit_cost')) {
+        db.exec(`ALTER TABLE order_items ADD COLUMN unit_cost REAL DEFAULT NULL`);
+      }
+    },
+  },
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {

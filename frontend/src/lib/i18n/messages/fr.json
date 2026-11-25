@@ -469,7 +469,9 @@
     "user": "Utilisateur",
     "whatsapp": "WhatsApp",
     "inventory": "Stock",
-    "tables": "Tables"
+    "tables": "Tables",
+    "profit": "Bénéfice",
+    "menuBar": "Menu de navigation"
   },
   "orders": {
     "active": "Actives",
@@ -736,6 +738,7 @@
     "managerPinRequired": "Le code PIN du responsable est requis pour les remises",
     "maxSelectionReached": "Maximum de {count} atteint",
     "menuLoadFailed": "Impossible de charger les données du menu",
+    "reorderFailed": "Échec de l'enregistrement du nouvel ordre",
     "methodCard": "Carte",
     "methodCash": "Espèces",
     "methodWallet": "Portefeuille",
@@ -2230,7 +2233,12 @@
     "chargeAutoApply": "Appliquer automatiquement",
     "chargePercentValue": "{value} % de la commande",
     "chargeFixedValue": "{value} par commande",
-    "chargeOptionalApply": "Ajouté à la demande"
+    "chargeOptionalApply": "Ajouté à la demande",
+    "navLayoutTitle": "Disposition de la navigation",
+    "navLayoutSidebar": "Barre latérale",
+    "navLayoutSidebarHint": "Pages listées dans une barre latérale à gauche.",
+    "navLayoutTopbar": "Barre de menu supérieure",
+    "navLayoutTopbarHint": "Pages dans une barre de menu en haut ; sur la caisse, les catégories s'affichent en grille à gauche."
   },
   "setup": {
     "alreadyCompleted": "La configuration a déjà été effectuée sur cette installation. Redirection vers la connexion…",
@@ -3028,5 +3036,48 @@
       "inbox": "Boîte de réception",
       "sent": "Envoyés"
     }
+  },
+  "profit": {
+    "title": "Bénéfice",
+    "subtitle": "Ventes nettes moins le coût des produits vendus.",
+    "preset": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "last7": "7 derniers jours",
+      "thisMonth": "Ce mois",
+      "lastMonth": "Mois dernier",
+      "custom": "Personnalisé"
+    },
+    "from": "Du",
+    "to": "Au",
+    "groupDay": "Par jour",
+    "groupMonth": "Par mois",
+    "compare": "Comparer à la période précédente",
+    "previousPeriod": "Période précédente : {start} – {end}",
+    "netSales": "Ventes nettes",
+    "cost": "Coût",
+    "profit": "Bénéfice",
+    "margin": "Marge",
+    "marginPrevious": "Précédent : {value}",
+    "vsPrevious": "vs précédent",
+    "newVsPrevious": "Nouveau vs précédent",
+    "trendTitle": "Ventes, coût et bénéfice",
+    "noData": "Aucune vente sur cette période.",
+    "highlights": "Points clés",
+    "bestPeriod": "Meilleure période",
+    "worstPeriod": "Période la plus faible",
+    "orders": "Commandes",
+    "itemsSold": "Articles vendus",
+    "profitPerOrder": "Bénéfice par commande",
+    "topByProfit": "Meilleurs produits par bénéfice",
+    "productsTitle": "Bénéfice par produit",
+    "sortBy": "Trier par",
+    "colProduct": "Produit",
+    "colQty": "Qté",
+    "missingCost": "Sans coût",
+    "missingCostHint": "Ce produit n'a pas de coût défini : son bénéfice égale ses ventes.",
+    "missingCostBanner": "{count, plural, one {# produit n'a} other {# produits n'ont}} pas de coût défini, ce qui surestime le bénéfice.",
+    "setCosts": "Définir les coûts",
+    "loadFailed": "Échec du chargement du rapport"
   }
 }

@@ -315,15 +315,16 @@ export default function DashboardPage() {
         signal: controller.signal,
       }),
       api.get('/reports/insights', { params: { days: 30 }, signal: controller.signal }),
+      api.get('/reports/topCategories', { params: { start_date: range.startDate, end_date: range.endDate, limit: 5 }, signal: controller.signal }),
       comparisonRequest,
     ])
-      .then(([statsRes, summaryRes, financialRes, topRes, recentRes, insightsRes, comparisonRes]) => {
+      .then(([statsRes, summaryRes, financialRes, topRes, recentRes, insightsRes, categoriesRes, comparisonRes]) => {
         setStats(statsRes?.data ?? null);
         setDaySummary(summaryRes?.data?.summary ?? null);
         setFinancialSummary(financialRes?.data.financialSummary ?? null);
         setTopProducts(topRes.data.topProducts || []);
         setRecentOrders(recentRes.data.recentOrders || []);
-        setInsights(insightsRes.data);
+        setInsights({ ...insightsRes.data, topCategories: categoriesRes.data.topCategories || [] });
         setWeeklyComparison(comparisonRes);
       })
       .catch((err: unknown) => {
@@ -776,7 +777,7 @@ export default function DashboardPage() {
                     {periodMode === 'month' ? t('topProductsMonth') : isToday ? t('topProductsToday') : t('topProducts')}
                   </h2>
                 </div>
-                <Link href="/products" className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover font-medium">
+                <Link href={`/dashboard/top-sellers?view=products&mode=${periodMode}&date=${periodMode === 'month' ? selectedMonth : selectedDate}`} className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover font-medium">
                   {t('viewAll')} <ArrowRight size={12} className="rtl-flip" />
                 </Link>
               </div>
@@ -852,7 +853,7 @@ export default function DashboardPage() {
                   </span>
                   <h2 className="font-semibold text-foreground">{t('topCategories')}</h2>
                 </div>
-                <Link href="/products" className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover font-medium">
+                <Link href={`/dashboard/top-sellers?view=categories&mode=${periodMode}&date=${periodMode === 'month' ? selectedMonth : selectedDate}`} className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover font-medium">
                   {t('viewAll')} <ArrowRight size={12} className="rtl-flip" />
                 </Link>
               </div>

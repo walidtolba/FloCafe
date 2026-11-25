@@ -123,6 +123,28 @@ async function main() {
       assert.equal(stockOfProduct(db, 'prod-cappuccino'), 50, 'cancelling returns the base product stock exactly');
     }
 
+    // ── Cost is snapshotted on the line at sale time ──────────────────────
+    {
+      db.prepare("UPDATE products SET cost = 120 WHERE id = 'prod-plain'").run();
+      db.prepare("UPDATE product_variants SET cost_price = 200 WHERE id = 'var-large'").run();
+      const response = await createOrder({
+        type: 'takeaway',
+        items: [{ product_id: 'prod-cappuccino', variant_id: 'var-large', quantity: 1 }, { product_id: 'prod-plain', quantity: 1 }],
+      });
+      assert.equal(response.status, 201, 'an order with costed items is created');
+      const lines = db.prepare('SELECT product_id, unit_cost FROM order_items WHERE order_id = ? ORDER BY id').all(response.data.order.id) as any[];
+      assert.equal(lines[0].unit_cost, 200, 'a variant line snapshots the variant cost');
+      assert.equal(lines[1].unit_cost, 120, 'a plain line snapshots the product cost');
+      db.prepare("UPDATE products SET cost = 999 WHERE id = 'prod-plain'").run();
+      assert.equal(
+        (db.prepare('SELECT unit_cost FROM order_items WHERE order_id = ? AND product_id = ?').get(response.data.order.id, 'prod-plain') as any).unit_cost,
+        120,
+        'editing the product cost later does not change the stored line cost',
+      );
+      db.prepare("UPDATE products SET cost = 0 WHERE id = 'prod-plain'").run();
+      db.prepare("UPDATE product_variants SET cost_price = NULL WHERE id = 'var-large'").run();
+    }
+
     // ── Tracked variant: its own stock, lost and regained ─────────────────
     {
       const before = stockOfVariant(db, 'var-small');
