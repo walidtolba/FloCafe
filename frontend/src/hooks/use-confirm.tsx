@@ -68,16 +68,18 @@ export function useConfirm() {
 
   const ConfirmDialog: ReactNode = state ? (
     <Dialog open={state.open} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+      <DialogContent className="gap-6 p-8 sm:max-w-xl" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{state.title || t('confirm')}</DialogTitle>
-          <DialogDescription className="whitespace-pre-line">{state.message}</DialogDescription>
+          <DialogTitle className="text-2xl font-bold">{state.title || t('confirm')}</DialogTitle>
+          <DialogDescription className="whitespace-pre-line text-lg">{state.message}</DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+        <DialogFooter className="gap-3">
+          <Button variant="outline" size="lg" className="h-14 min-w-32 px-8 text-lg" onClick={handleCancel}>
             {state.cancelLabel || t('cancel')}
           </Button>
           <Button
+            size="lg"
+            className="h-14 min-w-32 px-8 text-lg"
             variant={state.destructive ? 'destructive' : 'default'}
             onClick={handleConfirm}
           >
